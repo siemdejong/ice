@@ -14,7 +14,7 @@ Plot graphs (Q, A, r or r3) where axes are categorized by sucrose level and IBP 
 Used to calculate best fits to the data. Currently has troubles calculating the best linear fit for some sets.
 
 ## Example folder structure
-```bash
+```
 Ice
 ├───analysis (folders containing Q, A, r and r3 info, as well as crystal detection images.)
 │   ├───0uM_X_10%_0
