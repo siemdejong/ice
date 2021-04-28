@@ -1,5 +1,5 @@
 # ice
-All things ice.
+This repo contains code I'm using for analysis on Ice-Binding Proteins (IBPs) for my bachelor project.
 
 ## The_main_single.py
 Adapted from earlier versions to calculate the ice volume fraction (Q), mean area (A), mean radius of curvature (r), mean radius of curvature cubed (r3). Running the file will prompt the user to select a frame directory and selecting an ROI.
