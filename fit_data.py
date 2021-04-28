@@ -71,7 +71,7 @@ def plot(df):
 # root = Tk() # File dialog
 # path = filedialog.askopenfilename(title = "Select data file")
 # root.destroy()
-path = r'E:\Ice\analysis\1uM_T18N_20%_0\data.csv'
+path = r'E:\Ice\analysis\1uM_T18N_20%_0\1uM_T18N_20%_0.csv'
 
 df = pd.read_csv(path)
 df.times = df.times * 13 / 21.52 # Correct for faster playback speed.
