@@ -664,6 +664,7 @@ def export_quantities(times, Q, N, A, r, r3):
     data = {
         'times': times,
         'Q': Q,
+        'N': N,
         'A': A,
         'r': r,
         'r3': r3
