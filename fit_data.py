@@ -23,20 +23,24 @@ def fitting(df):
     print(f"Q = {round(Q_opt[0], 3)} +/- {round(Q_err[0], 3)}.")
 
     # Mean area A.
-    A_opt, A_cov = curve_fit(linear_func, df.times, df.Q)
+    A_opt, A_cov = curve_fit(linear_func, df.times, df.Q) # Doesn't settle on a right fit for 1uM_T18N_20%_0 for example.
     A_err = np.sqrt(np.diag(A_cov))
-    df.At_opt = A_opt[0]
-    df.A0_opt = A_opt[1]
-    df.At_err = A_err[0]
-    df.A0_err = A_err[1]
+    df.At_opt, df.A0_opt = A_opt
+    df.At_err, df.A0_err = A_err
+    print(f"Mean area = a*x + b, a={round(A_opt[0], 2)} +/- {round(A_err[0], 2)}, b={round(A_opt[1], 2)} +/- {round(A_err[1], 2)}.")
 
-    print(f"Mean area = a*x + b, a={round(A_opt[0], 2)} +/- {round(A_opt[1], 2)}, b={round(A_err[0], 2)} +/- {round(A_err[1], 2)}.")
+    # Mean radius of curvature <r>^3.
+    r3_opt, r3_cov = curve_fit(linear_func, df.times, df.r3)
+    r3_err = np.sqrt(np.diag(r3_cov))
+    df.r3t_opt, df.r30_opt = r3_opt
+    df.r3t_err, df.r30_err = r3_err
+    print(f"<r>^3 = a*x + b, a={round(r3_opt[0], 2)} +/- {round(r3_err[0], 2)}, b={round(r3_opt[1], 2)} +/- {round(r3_err[1], 2)}.")
 
     return df
 
 def plot(df):
     """Plot the data together with the fit."""
-    fig, axs = plt.subplots(1, 2)
+    fig, axs = plt.subplots(1, 3)
 
     # Ice volume fraction Q.
     axs[0].set_title("Q")
@@ -50,6 +54,12 @@ def plot(df):
     A_est = linear_func(df.times, df.At_opt, df.A0_opt)
     axs[1].scatter(df.times, df.A, s=0.8, c='k', label="data")
     axs[1].plot(df.times, A_est, 'r', label="fit")
+
+    # Mean radius of curvature <r>^3.
+    axs[2].set_title("<r>^3")
+    r3_est = linear_func(df.times, df.r3t_opt, df.r30_opt)
+    axs[2].scatter(df.times, df.r3, s=0.8, c='k', label="data")
+    axs[2].plot(df.times, r3_est, 'r', label="fit")
     # y_err = np.sqrt((xdata * p_err[0])**2 + (p_err[0] * np.std(xdata))**2 + (p_err[1])**2) # Calculate error for linear fits.
 
     # plt.fill_between(xdata, y_est - y_err, y_est + y_err, alpha=0.2)
