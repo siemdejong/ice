@@ -41,7 +41,7 @@ def fitting(df):
     N_err = np.sqrt(np.diag(N_cov))
     df.Nt_opt, df.N0_opt = N_opt
     df.Nt_err, df.N0_err = N_err
-    print(f"<r>^3 = a*x + b, a={round(N_opt[0], 2)} +/- {round(N_err[0], 2)}, b={round(N_opt[1], 2)} +/- {round(N_err[1], 2)}.")    
+    print(f"N = a*x + b, a={round(N_opt[0], 2)} +/- {round(N_err[0], 2)}, b={round(N_opt[1], 2)} +/- {round(N_err[1], 2)}.")    
 
     return df
 
