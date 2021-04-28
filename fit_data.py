@@ -23,7 +23,7 @@ def fitting(df):
     print(f"Q = {round(Q_opt[0], 3)} +/- {round(Q_err[0], 3)}.")
 
     # Mean area A.
-    A_opt, A_cov = curve_fit(linear_func, df.times, df.Q) # Doesn't settle on a right fit for 1uM_T18N_20%_0 for example.
+    A_opt, A_cov = curve_fit(linear_func, df.times, df.A)
     A_err = np.sqrt(np.diag(A_cov))
     df.At_opt, df.A0_opt = A_opt
     df.At_err, df.A0_err = A_err
