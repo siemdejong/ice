@@ -1,3 +1,6 @@
+plot_ibp_grid.py
+kappa_dt.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
