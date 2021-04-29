@@ -496,7 +496,7 @@ def plot_ivf(ice_volume_fraction_list, times):
     fig_volume_fraction_ax.scatter(times, ice_volume_fraction_list)
     fig_volume_fraction_ax.set_ylabel('Ice volume fraction')
     fig_volume_fraction_ax.set_xlabel('Time [s]')
-    fig_volume_fraction_ax.set_xticks(np.linspace(round(times[0]), round(times[-1]),num=2)) # Set this for appropriate axis ticks.
+    # fig_volume_fraction_ax.set_xticks(np.linspace(round(times[0]), round(times[-1]),num=2)) # Set this for appropriate axis ticks.
     fig_volume_fraction.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
                 wspace=0.3, hspace=0.5)
     fig_volume_fraction.savefig(os.path.join(output_img_dir, 'volume_fraction.png'))
