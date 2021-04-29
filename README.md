@@ -11,7 +11,7 @@ Run to sample frames from movies. Adapted from earlier versions to extract frame
 Plot graphs (Q, A, r or r3) where axes are categorized by sucrose level and IBP variant. *Doesn't work right now. Switched from json to csv.*
 
 ## fit_data.py
-Used to calculate best fits to the data. Currently has troubles calculating the best linear fit for some sets.
+Used to calculate best fits to the data.
 
 ## Example folder structure
 ```
