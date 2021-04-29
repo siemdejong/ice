@@ -91,9 +91,11 @@ class FrameImg:
 
     def plot_stages(self, img, img_denoised, img_treshold):
         images = [img, img_denoised, img_treshold]
+        titles = ['original', 'denoised', 'threshold']
         for i in range(len(images)):
             plt.subplot(2, 2, i+1), plt.imshow(images[i], 'gray')
             plt.xticks([]), plt.yticks([])
+            plt.title(titles[i])
         plt.suptitle(self.file_name, fontsize = 8)
         plt.show()
 
