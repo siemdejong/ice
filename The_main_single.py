@@ -19,6 +19,8 @@ import json
 from tkinter import filedialog
 from tkinter import *
 import csv
+import platform
+import subprocess
 
 class FrameImg:
     ''' Add Description '''
@@ -494,6 +496,14 @@ def setup_detection_box(target_crys, padding_margin):
     and additional padding margin to be able to detect possible fusions/splits over time. """
     pass
 
+def open_file(path):
+    if platform.system() == "Windows":
+        os.startfile(path)
+    elif platform.system() == "Darwin":
+        subprocess.Popen(["open", path])
+    else:
+        subprocess.Popen(["xdg-open", path])
+
 def plot_ivf(ice_volume_fraction_list, times):
     # Plot the volume fraction in time.
     fig_volume_fraction = plt.figure()
@@ -708,6 +718,7 @@ if __name__ == "__main__":
     output_img_dir = set_and_check_folder(IMAGE_OUTPUT_FOLDER_NAME, True)
     csv_export_dir = set_and_check_folder(CSV_EXPORT_FOLDER, True)
     img_files, file_count = get_img_files_ordered(imgs_dir)
+    open_file(IMAGE_OUTPUT_FOLDER_NAME)
     frame_list = create_frame_list(img_files, file_count, imgs_dir,
         output_img_dir, IMAGE_FORMAT, PLOT_FRAME_CONTOURS)
 
