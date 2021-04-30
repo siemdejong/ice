@@ -109,6 +109,12 @@ class FrameImg:
             Docs : https://docs.opencv.org/2.4/modules/photo/doc/denoising.html '''
         return cv2.fastNlMeansDenoising(src=img, dst=None, h=10,
         templateWindowSize=11, searchWindowSize=27)
+    
+    def sharpen_img(self, img):
+        """Sharpen image using unsharp masking."""
+        gaussian_3 = cv2.GaussianBlur(img, (0, 0), 1)
+        unsharp_image = cv2.addWeighted(img, 1.5, gaussian_3, -0.5, 0, img)
+        return unsharp_image
 
     def tresholding_img(self,img_denoised):
         ''' Treshold image. 
