@@ -23,6 +23,7 @@ import csv
 import platform
 import subprocess
 from itertools import combinations
+from glob import glob
 
 class FrameImg:
     ''' Add Description '''
@@ -258,7 +259,7 @@ class FrameImg:
             org_img = mpimg.imread(os.path.join(self.file_path,self.file_name))
         plt.imshow(org_img)
         for crystal in self.crystalobjects:
-            plt.scatter(crystal.s_contours[...,0], crystal.s_contours[...,1], s=0.1, color='red')
+            plt.scatter(crystal.s_contours[...,0], crystal.s_contours[...,1], s=0.05, color='red')
             # plt.scatter(crystal.center_arr[0],crystal.center_arr[1], s=2)
         fig.suptitle(frame_img_name, fontsize = 8)
         if save_image:
@@ -498,12 +499,13 @@ def get_img_files_ordered(dir_i):
     """ Function returns a list of all input frames, ordered by their frame number, 
     together with a count of the total number of frames.  """
     img_files = []
-    for file in os.listdir(dir_i):
+    for filename in [os.path.basename(filename) for filename in glob(os.path.join(dir_i, '*[!x].png'))]: # Allow for exclusion (x) of images (masking is a better solution)
+    # for filename in os.listdir(dir_i)
         try:
             file_i = {
-            'filename' : file,
+            'filename' : filename,
             # 'file_num' : int(file.split('frame')[1].split('.')[0])
-            'file_num': int(file.split('.')[0]) # The data acquired by Siem after using extract_frames.py by Agata uses another file naming scheme. (<time>s.png instead of frame<frame>.png)
+            'file_num': int(filename.split('.')[0]) # The data acquired by Siem after using extract_frames.py by Agata uses another file naming scheme. (<time>s.png instead of frame<frame>.png)
             }
             img_files.append(file_i )
         except IndexError:
@@ -587,7 +589,7 @@ def plot_ivf(ice_volume_fraction_list, times):
     # fig_volume_fraction_ax.set_xticks(np.linspace(round(times[0]), round(times[-1]),num=2)) # Set this for appropriate axis ticks.
     fig_volume_fraction.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
                 wspace=0.3, hspace=0.5)
-    fig_volume_fraction.savefig(os.path.join(output_img_dir, 'volume_fraction.png'))
+    fig_volume_fraction.savefig(os.path.join(output_img_dir, 'volume_fraction.png'), bbox_inches='tight')
     plt.close()
 
 def calculate_volume_fraction(frame_list):
@@ -613,7 +615,7 @@ def calculate_volume_fraction(frame_list):
     return times, ice_volume_fraction_list
 
 
-def plot_crystal_numbers_per_ROIarea(crystal_numbers_per_px2, times, area):
+def plot_crystal_numbers_per_ROIarea(crystal_numbers_per_px2, times, area=100):
     """Plot the amount of crystals per area in time.
     area: the area in square micrometers in which you will find the amount of crystals
     """
@@ -628,7 +630,7 @@ def plot_crystal_numbers_per_ROIarea(crystal_numbers_per_px2, times, area):
     fig_crystal_numbers_ax.set_xlabel('Time [s]')
     fig_crystal_numbers.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
                 wspace=0.3, hspace=0.5)
-    fig_crystal_numbers.savefig(os.path.join(output_img_dir, 'number_of_crystals.png'))
+    fig_crystal_numbers.savefig(os.path.join(output_img_dir, 'number_of_crystals.png'), bbox_inches='tight')
     plt.close()
 
 
@@ -646,7 +648,7 @@ def amount_of_crystals_per_ROIarea(frame_list):
     ROI_area = frame_list[0].img_width * frame_list[0].img_height
     crystal_numbers_per_px2 = np.array(crystal_numbers) / ROI_area
     
-    plot_crystal_numbers_per_ROIarea(crystal_numbers_per_px2, times, 100)
+    plot_crystal_numbers_per_ROIarea(crystal_numbers_per_px2, times)
 
     return crystal_numbers
 
@@ -664,7 +666,7 @@ def plot_avg_crystal_area(avg_crystal_areas, times):
     fig_avg_crystal_areas_ax.set_xlabel('Time [s]')
     fig_avg_crystal_areas.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
                 wspace=0.3, hspace=0.5)
-    fig_avg_crystal_areas.savefig(os.path.join(output_img_dir, 'average_crystal_area.png'))
+    fig_avg_crystal_areas.savefig(os.path.join(output_img_dir, 'average_crystal_area.png'), bbox_inches='tight')
     plt.close()
 
 def calculate_avg_crystal_area(frame):
@@ -698,7 +700,7 @@ def plot_mean_radius(mean_radius_list, times):
     fig_mean_radius_ax.set_xlabel('Time [s]')
     fig_mean_radius.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
                 wspace=0.3, hspace=0.5)
-    fig_mean_radius.savefig(os.path.join(output_img_dir, 'mean_radius.png'))
+    fig_mean_radius.savefig(os.path.join(output_img_dir, 'mean_radius.png'), bbox_inches='tight')
     plt.close()
 
 def calculate_mean_radius(frame):
@@ -732,7 +734,7 @@ def plot_mean_radius3(mean_radius3_list, times):
     fig_mean_radius3_ax.set_xlabel('Time [s]')
     fig_mean_radius3.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
                 wspace=0.3, hspace=0.5)
-    fig_mean_radius3.savefig(os.path.join(output_img_dir, 'mean_radius3.png'))
+    fig_mean_radius3.savefig(os.path.join(output_img_dir, 'mean_radius3.png'), bbox_inches='tight')
     plt.close()
 
 def calculate_mean_radius3(frame):
@@ -785,8 +787,9 @@ if __name__ == "__main__":
     CSV_EXPORT_FOLDER = os.path.join(INPUT_FOLDER_NAME, os.path.join(os.pardir, os.pardir, 'csv', os.path.basename(INPUT_FOLDER_NAME)))
 
     # Thresholding
-    threshold_blocksize = 151
-    threshold_constant = 1
+    # 599 and 0 are 'okay' for 0uM 10% for example
+    threshold_blocksize = int(input('Threshold blocksize: '))
+    threshold_constant = int(input('Threshold subtraction constant: '))
 
     MAX_CENTER_DISTANCE = 0
     AREA_PCT = 0
@@ -812,7 +815,7 @@ if __name__ == "__main__":
 
     # Start from 1 here, because frame 0 / the first frame already done above
     for i in range(1,len(frame_list)):
-        print(f'Frame # {i+1}:')
+        print(f'Frame # {i+1}:', end='\r')
         c_central_list = frame_list[i].crystal_centers
         c_crystal_areas_list = frame_list[i].crystal_areas
 
@@ -890,10 +893,10 @@ if __name__ == "__main__":
                             break
 
         post_frame_center_coord_count = len(c_central_list)
-        print('------------------------------------------------------')
-        print(f'Frame # {i + 1}:')
-        print(f'C coords went from {pre_frame_center_coord_count} to {post_frame_center_coord_count}  ')
-        print(f'Used count: {pre_frame_center_coord_count - post_frame_center_coord_count }')
+        # print('------------------------------------------------------')
+        # print(f'Frame # {i + 1}:')
+        # print(f'C coords went from {pre_frame_center_coord_count} to {post_frame_center_coord_count}  ')
+        # print(f'Used count: {pre_frame_center_coord_count - post_frame_center_coord_count }')
     crystal_linking_time = (time.time() - start_time) - img_processing_time # Log time it took to link crystals
 
     crystal_tracking_count = len(crystal_tracking_list)
