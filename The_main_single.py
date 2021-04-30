@@ -258,7 +258,7 @@ class FrameImg:
             org_img = mpimg.imread(os.path.join(self.file_path,self.file_name))
         plt.imshow(org_img)
         for crystal in self.crystalobjects:
-            plt.scatter(crystal.s_contours[...,0], crystal.s_contours[...,1], s=1)
+            plt.scatter(crystal.s_contours[...,0], crystal.s_contours[...,1], s=0.1, color='red')
             # plt.scatter(crystal.center_arr[0],crystal.center_arr[1], s=2)
         fig.suptitle(frame_img_name, fontsize = 8)
         if save_image:
