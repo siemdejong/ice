@@ -123,7 +123,7 @@ class FrameImg:
             Docs: https://docs.opencv.org/3.4/d7/d1b/group__imgproc__misc.html#ga72b913f352e4a1b1b397736707afcde3 '''
         return cv2.adaptiveThreshold(src=img_denoised, maxValue=255,
                 adaptiveMethod=cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                thresholdType=cv2.THRESH_BINARY, blockSize=199, C=1)
+                thresholdType=cv2.THRESH_BINARY, blockSize=threshold_blocksize, C=threshold_constant) # big crystals -> high blockSize; small crystals -> small blockSize.
 
     def get_img_contours(self, img_treshold):
         ''' Retreive image contours. ## NEED TO WORK WITH RETR_CCOMP instead of RETR_EXTERNAL TO GET HIERACHY FOR DEALIG WITH INCEPTIONS
@@ -543,15 +543,18 @@ def calculate_volume_fraction(frame_list):
     return times, ice_volume_fraction_list
 
 
-def plot_crystal_numbers(crystal_numbers, times):
-    "Plot the amount of crystals in time."
+def plot_crystal_numbers_per_ROIarea(crystal_numbers_per_px2, times, area):
+    """Plot the amount of crystals per area in time.
+    area: the area in square micrometers in which you will find the amount of crystals
+    """
+    space_scale = 86.7*10**(-9) #m
     fig_crystal_numbers = plt.figure()
     fig_crystal_numbers.tight_layout()
     gs_vol_frac = fig_crystal_numbers.add_gridspec(nrows=1, ncols=1)
     fig_crystal_numbers_ax = fig_crystal_numbers.add_subplot(gs_vol_frac[0, 0])
     # fig_volume_fraction_ax.title.set_text(frame_list[0].imgs_dir)
-    fig_crystal_numbers_ax.scatter(times, crystal_numbers)
-    fig_crystal_numbers_ax.set_ylabel('Number of crystals')
+    fig_crystal_numbers_ax.scatter(times, crystal_numbers_per_px2 / space_scale**2 * 1e-12 / area)
+    fig_crystal_numbers_ax.set_ylabel(f'Number of crystals per {area} $\mu$m$^2$')
     fig_crystal_numbers_ax.set_xlabel('Time [s]')
     fig_crystal_numbers.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
                 wspace=0.3, hspace=0.5)
@@ -559,8 +562,8 @@ def plot_crystal_numbers(crystal_numbers, times):
     plt.close()
 
 
-def amount_of_crystals(frame_list):
-    "Calculate the amount of crystals in the ROI in time."
+def amount_of_crystals_per_ROIarea(frame_list):
+    """Calculate the amount of crystals per ROI area in the ROI in time."""
     print("Plotting number of crystals")
     crystal_numbers = []
     times = []
@@ -570,12 +573,15 @@ def amount_of_crystals(frame_list):
         time = float(frame.file_name.split('s')[0])
         times.append(time)
     
-    plot_crystal_numbers(crystal_numbers, times)
+    ROI_area = frame_list[0].img_width * frame_list[0].img_height
+    crystal_numbers_per_px2 = np.array(crystal_numbers) / ROI_area
+    
+    plot_crystal_numbers_per_ROIarea(crystal_numbers_per_px2, times, 100)
 
     return crystal_numbers
 
 def plot_avg_crystal_area(avg_crystal_areas, times):
-    "Plot the amount of crystals in time."
+    """Plot the amount of crystals in time."""
     space_scale = 86.7*10**(-9) #m
 
     fig_avg_crystal_areas = plt.figure()
@@ -592,13 +598,13 @@ def plot_avg_crystal_area(avg_crystal_areas, times):
     plt.close()
 
 def calculate_avg_crystal_area(frame):
-    "Calculate the average crystal area inside a frame."
+    """Calculate the average crystal area inside a frame."""
     avg = np.mean([crystal.area for crystal in frame.crystalobjects])
 
     return avg
 
 def avg_crystal_area(frame_list):
-    "Plot the average crystal area in time."
+    """Plot the average crystal area in time."""
     print("Calculating average areas per time.")
 
     avg_area_list = list(map(calculate_avg_crystal_area, frame_list))
@@ -609,7 +615,7 @@ def avg_crystal_area(frame_list):
     return avg_area_list
 
 def plot_mean_radius(mean_radius_list, times):
-    "Plot the amount of crystals in time."
+    """Plot the amount of crystals in time."""
     space_scale = 86.7*10**(-9) #m
 
     fig_mean_radius = plt.figure()
@@ -626,13 +632,13 @@ def plot_mean_radius(mean_radius_list, times):
     plt.close()
 
 def calculate_mean_radius(frame):
-    "Calculate the mean radius from the mean curvature by taking its reciprocal."
+    """Calculate the mean radius from the mean curvature by taking its reciprocal."""
     mean_curv = np.mean([crystal.mean_curvature for crystal in frame.crystalobjects])
     mean_radius = 1 / mean_curv
     return mean_radius
 
 def mean_radius(frame_list):
-    "Plot the mean radius of the crystals in the ROI."
+    """Plot the mean radius of the crystals in the ROI."""
     print("Calculating mean radius of curvature per time")
 
     mean_radius_list = list(map(calculate_mean_radius, frame_list))
@@ -643,7 +649,7 @@ def mean_radius(frame_list):
     return mean_radius_list
 
 def plot_mean_radius3(mean_radius3_list, times):
-    "Plot the amount of crystals in time."
+    """Plot the amount of crystals in time."""
     space_scale = 86.7*10**(-9) #m
 
     fig_mean_radius3 = plt.figure()
@@ -660,13 +666,13 @@ def plot_mean_radius3(mean_radius3_list, times):
     plt.close()
 
 def calculate_mean_radius3(frame):
-    "Calculate the mean radius cubed from the mean curvature by taking its reciprocal and cubing the outcome."
+    """Calculate the mean radius cubed from the mean curvature by taking its reciprocal and cubing the outcome."""
     mean_curv = np.mean([crystal.mean_curvature for crystal in frame.crystalobjects])
     mean_radius = 1 / mean_curv
     return mean_radius**3
 
 def mean_radius3(frame_list):
-    "Plot the mean radius cubed of the crystals in the ROI."
+    """Plot the mean radius cubed of the crystals in the ROI."""
     print("Calculating mean radius cubed per time")
 
     mean_radius3_list = list(map(calculate_mean_radius3, frame_list))
@@ -677,7 +683,7 @@ def mean_radius3(frame_list):
     return mean_radius3_list
 
 
-def export_quantities(times, Q, N, A, r, r3):
+def export_quantities(times, Q, N, A, r, r3, ROI_area):
     """Export the calculated quantities to csv."""
     data = {
         'times': times,
@@ -685,7 +691,8 @@ def export_quantities(times, Q, N, A, r, r3):
         'N': N,
         'A': A,
         'r': r,
-        'r3': r3
+        'r3': r3,
+        'ROI_area': ROI_area
     }
     df = pd.DataFrame(data)
     df.to_csv(os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.path.basename(IMAGE_OUTPUT_FOLDER_NAME) + '.csv'), )
@@ -707,7 +714,10 @@ if __name__ == "__main__":
     IMAGE_OUTPUT_FOLDER_NAME = os.path.join(INPUT_FOLDER_NAME, os.path.join(os.pardir, os.pardir, 'analysis', os.path.basename(INPUT_FOLDER_NAME)))
     CSV_EXPORT_FOLDER = os.path.join(INPUT_FOLDER_NAME, os.path.join(os.pardir, os.pardir, 'csv', os.path.basename(INPUT_FOLDER_NAME)))
 
-    # Agata says these don't matter for me, but they do, right? Because I rely on the curvatures calculated during tracking.
+    # Thresholding
+    threshold_blocksize = 35
+    threshold_constant = 5
+
     MAX_CENTER_DISTANCE = 0
     AREA_PCT = 0
     CENTER_PCT = 0
@@ -862,7 +872,7 @@ if __name__ == "__main__":
 
     times, Q = calculate_volume_fraction(frame_list)
 
-    N = amount_of_crystals(frame_list)
+    N = amount_of_crystals_per_ROIarea(frame_list)
 
     A = avg_crystal_area(frame_list)
 
@@ -870,7 +880,8 @@ if __name__ == "__main__":
 
     r3 = mean_radius3(frame_list)
 
-    export_quantities(times, Q, N, A, r, r3)
+    ROI_area = frame_list[0].img_height * frame_list[0].img_width
+    export_quantities(times, Q, N, A, r, r3, ROI_area)
 
     for i, crystallcoll in enumerate(crystal_tracking_list):
         df_i = pd.concat(crystallcoll.s_contours_dfs)
