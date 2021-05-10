@@ -55,7 +55,7 @@ class FrameImg:
         c_max = self.crystal_areas[len(self.crystal_areas) - 1] # Get largest crystal area
         c_max_s = self.crystal_areas[len(self.crystal_areas) - 2] # Get second largest crystal area
         area_ratio = c_max / c_max_s
-        if area_ratio > 5: # If largest area is 10 times that of the second largest area
+        if area_ratio > 1: # If largest area is 10 times that of the second largest area
             max_crys = [c for c in self.crystalobjects if c.area == c_max][0] # Retreive crystal object
             print(f'Dropping max crystal, size is {round(area_ratio,2)} times the second biggest crystal')
             # Remove crystal attributes from list, and the crystal form the crystalobjects list.
@@ -123,33 +123,45 @@ class FrameImg:
         ''' Treshold image. 
             Docs: https://docs.opencv.org/3.4/d7/d1b/group__imgproc__misc.html#ga72b913f352e4a1b1b397736707afcde3 '''
         return cv2.adaptiveThreshold(src=img_denoised, maxValue=255,
-                adaptiveMethod=cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                adaptiveMethod=cv2.ADAPTIVE_THRESH_MEAN_C,
                 thresholdType=cv2.THRESH_BINARY, blockSize=threshold_blocksize, C=threshold_constant) # big crystals -> high blockSize; small crystals -> small blockSize.
 
     def get_img_contours(self, img_treshold):
         ''' Retreive image contours. ## NEED TO WORK WITH RETR_CCOMP instead of RETR_EXTERNAL TO GET HIERACHY FOR DEALIG WITH INCEPTIONS
             Docs: https://docs.opencv.org/3.4/d3/dc0/group__imgproc__shape.html#ga17ed9f5d79ae97bd4c7cf18403e1689a'''
         self.contours, self.hierarchy = cv2.findContours(img_treshold,
-            cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
 
     def process_contours(self):
-        ''' First creates two empty lists to store the crystals and the reminaining/other objects. Next, 
+        ''' First creates two empty lists to store the crystals and the remaining/other objects. Next,
             loops through all the retreives contours: If the len(contour), which is the amount of coordinate
-            points is large enough, it creates a CrystalObject class instance. Then, if the 'contour lenght'
+            points is large enough, it creates a CrystalObject class instance. Depending on whether this is a contour
+            with a child or not, child contour info will be passed to the crystalobject as well.
+            If a contour is a child, no seperate object is created for those contour. Then, if the 'contour lenght'
             is greater than 2, it adds the CrystalObject to the list. If the conditions are not met, the object
             is stored in the other objects list.   '''
         self.crystalobjects = []
         self.otherobjects = []
         num_contours = len(self.contours)
         print(f'Number of contours found: {num_contours}')
+        children = []
+        parents = []
         for i, contour in enumerate(self.contours):
-            if len(contour) > 30: # Checks the amount of coordinate points in the contour <- NEEDS TO BE REWORKED 
+            if len(contour) > 30: # Checks the amount of coordinate points in the contour
                 print(f'Processing img contours {i}/{num_contours}', end = '\r')
-                obj = CrystalObject(contour, contour_num= i, frame_num = self.frame_num)
-                if obj.x_center == 0 and obj.y_center == 0:
-                    self.otherobjects.append(obj)
-                else:
-                    self.crystalobjects.append(obj) # <- SEEMS TO NEVER BE THE CASE.........
+
+                if self.hierarchy[0][i][3] == -1:  # Only create a crystal when it's not a hole
+                    # Check whether contour is a parent, if so add the childrens contour as input as well
+                    if self.hierarchy[0][i][2] != -1:
+                        child_contour = self.contours[i+1]
+                        obj = CrystalObject(contour, self.hierarchy[0][i], child_contour, True, contour_num=i, frame_num=self.frame_num)
+                    else:
+                        obj = CrystalObject(contour, self.hierarchy[0][i], None, False, contour_num=i, frame_num=self.frame_num)
+
+                    if obj.x_center == 0 and obj.y_center == 0:
+                        self.otherobjects.append(obj)
+                    else:
+                        self.crystalobjects.append(obj)
 
         print('Contour processing done  .......')
         print(f'Number of contours stored: {len(self.crystalobjects)}')
@@ -254,39 +266,79 @@ class FrameImg:
 
 
 class CrystalObject:
-    ''' Add Description '''
-    def __init__(self, contour_raw, contour_num, frame_num):
+    '''The crystal object keeps track of all the attributes of a crystal belonging to a contour in single frame
+        NB: there are two very similar dataframe functions for the case of regular crystal or crystal with hole.'''
+    def __init__(self, contour_raw, hierarchy, child_contour_raw, parent_bool, contour_num, frame_num):
         self.contour_raw = contour_raw
+        self.hierarchy = hierarchy
         self.frame_num = frame_num
         self.contour_num = contour_num
         self.contour_length = len(self.contour_raw)
+        self.parent_bool = parent_bool
+        self.child_contour_raw = child_contour_raw
 
+        self.child_moments = cv2.moments(child_contour_raw)
         self.moments = cv2.moments(contour_raw)
         self.get_center_point()
+
         if self.contour_length > 2:
             self.get_area()
             self.get_length()
-            self.set_contours_dataframe()
-            # print(self.s_contours_df.x.max())
+            # This is where the separate smoothing paths are chosen based on regular or crystal with hole
+            if self.parent_bool == True:
+                self.set_contours_dataframe()
+                self.set_contours_child_dataframe()
+                self.s_contours_df = pd.concat([self.s_contours_df, self.s_contours_df_child])
+            else:
+                self.set_contours_dataframe()
+            self.s_contours = self.s_contours_df.drop(['curvature','mean(curvature)', 'sx', 'sy', 'contour_num', 'frame', 'area', 'length'], axis=1).to_numpy()
 
     def get_center_point(self):
         ''' Using the contour moments, retreives the center x and y coordinates,
-            and an array of said coordinates. '''
+            and an array of said coordinates. Initially just calculates the COM of the outer contour. However, if there
+            is a hole in the contour the COM will be recomputed with the hole taken into account'''
+
+        # calculate crystal moments and center coords
         if self.moments['m00'] != 0:
             self.x_center = int(self.moments['m10'] / self.moments['m00'])
             self.y_center = int(self.moments['m01'] / self.moments['m00'])
         else:
             self.x_center = 0
             self.y_center = 0
+
+        # in parent case, change the COM according to the hole
+        if self.parent_bool == True:
+            # calculate child moments and COM
+            if self.child_moments['m00'] != 0:
+                self.x_center_child = int(self.child_moments['m10'] / self.child_moments['m00'])
+                self.y_center_child = int(self.child_moments['m01'] / self.child_moments['m00'])
+            else:
+                self.x_center_child = 0
+                self.y_center_child = 0
+            # calculate common COM, assuming uniform thickness and density
+            a1 = cv2.contourArea(self.contour_raw) - cv2.contourArea(self.child_contour_raw)
+            a2 = cv2.contourArea(self.child_contour_raw)
+            # print(f'moments (parent, child): {self.moments}, {self.child_moments}')
+            # print(f"before any computation the center of parent is ({self.x_center, self.y_center})")
+            self.x_center = (a1 * self.x_center - a2 * self.x_center_child) / (a1 - a2)
+            self.y_center = (a1 * self.y_center - a2 * self.y_center_child) / (a1 - a2)
+            # print(f"After computation the center of parent now is is ({self.x_center, self.y_center})")
+
         self.center_arr = np.array([self.x_center, self.y_center])
 
     def get_area(self):
-        ''' Sets the area of the contour '''
-        self.area = cv2.contourArea(self.contour_raw)
+        ''' Sets the area of the contour. Two separate paths for regular crystals of crystals with holes'''
+        if self.parent_bool == True:
+            self.area = cv2.contourArea(self.contour_raw) - cv2.contourArea(self.child_contour_raw)
+        else:
+            self.area = cv2.contourArea(self.contour_raw)
 
     def get_length(self):
-        ''' Sets the 'length' of the contour ??? '''
-        self.length = cv2.arcLength(self.contour_raw, True)
+        ''' Sets the 'length' of the contour. Two separate paths for regular crystals of crystals with holes'''
+        if self.parent_bool == True:
+            self.length = cv2.arcLength(self.contour_raw, True) + cv2.arcLength(self.child_contour_raw, True)
+        else:
+            self.length = cv2.arcLength(self.contour_raw, True)
 
     def calculate_curvature(self, df, smoothing):
         ''' Calculates the curvature, ands its mean, of the of curvature coordinates, and creates the sx and sy
@@ -308,10 +360,13 @@ class CrystalObject:
         return df        
 
     def set_contours_dataframe(self, smoothing=10):
-        ''' Function to prepare the crystal dataframe. Loads in the contours array, padds them (reason?), and then
-            smooths the coordinates using rolling mean. Next, calls the calculate_cruvature function in order to 
-            retrieve the curvature and its mean. Adds the contour number, frame, area, and lenght of the contour, 
-            and saves the resulting df. Finally, it creates an additional df with the rounded coordinates. ''' 
+        '''
+        Function to prepare the crystal dataframe in case of a regular crystal. Loads in the contours array, padds them (reason?), and then
+        smooths the coordinates using rolling mean. Next, calls the calculate_cruvature function in order to
+        retrieve the curvature and its mean. Adds the contour number, frame, area, and lenght of the contour,
+        and saves the resulting df. Finally, it creates an additional df with the rounded coordinates.
+        '''
+
         contours_raw = np.reshape(self.contour_raw, (self.contour_raw.shape[0],2))
         contours = np.pad(contours_raw, ((20,20), (0,0)), 'wrap')
         df = pd.DataFrame(contours, columns={'x', 'y'})
@@ -322,8 +377,25 @@ class CrystalObject:
         df['area'] = self.area
         df['length'] = self.length
         self.s_contours_df = df
-        self.s_contours = self.s_contours_df.drop(['curvature','mean(curvature)', 'sx', 'sy', 'contour_num', 'frame', 'area', 'length'], axis=1).to_numpy()
         
+    def set_contours_child_dataframe(self, smoothing=10):
+        '''
+        Function to prepare the crystal dataframe. Loads in the contours array, padds them (reason?), and then
+        smooths the coordinates using rolling mean. Next, calls the calculate_cruvature function in order to
+        retrieve the curvature and its mean. Adds the contour number, frame, area, and lenght of the contour,
+        and saves the resulting df. Finally, it creates an additional df with the rounded coordinates.
+        '''
+
+        child_contours_raw = np.reshape(self.child_contour_raw, (self.child_contour_raw.shape[0], 2))
+        child_contours = np.pad(child_contours_raw, ((20, 20), (0, 0)), 'wrap')
+        df = pd.DataFrame(child_contours, columns={'x', 'y'})
+        df = df.reset_index(drop=True).rolling(smoothing).mean().dropna()
+        df = self.calculate_curvature(df, smoothing)
+        df['contour_num'] = self.contour_num
+        df['frame'] = self.frame_num
+        df['area'] = self.area
+        df['length'] = self.length
+        self.s_contours_df_child = df
 
 
 class CrystalRecog:
@@ -340,6 +412,11 @@ class CrystalRecog:
         self.mean_curvatures = []
         self.c_count = 0
         self.frames_used = []
+        self.parent_bool = []
+        self.child_contours_raw = []
+        self.x_center = c_obj.x_center
+        self.y_center = c_obj.y_center
+        self.hierarchy = c_obj.hierarchy
         self.count_num = c_obj.contour_num
         self.add_crystalobject(c_obj)
         
@@ -349,8 +426,11 @@ class CrystalRecog:
         self.raw_contours.append(c_obj.contour_raw)
         self.s_contours.append(c_obj.s_contours)
         self.lengths.append(c_obj.length)
+
         self.areas.append(c_obj.area)
         self.center_arrays.append(c_obj.center_arr)
+        self.child_contours_raw.append(c_obj.child_contour_raw)
+        self.parent_bool.append(c_obj.parent_bool)
         self.mean_curvatures.append(c_obj.s_contours_df['mean(curvature)'].min())
         self.frames_used.append(str(c_obj.frame_num))
         self.c_count += 1
@@ -368,20 +448,6 @@ class CrystalRecog:
         min_x -= x_padding
         return min_y, max_y, min_x, max_x
 
-    # def add_dubble_crystalobject(self, c_obj1, c_obj2):
-    #     s_contours_df = pd.concat([c_obj1.s_contours_df,c_obj2.s_contours_df])
-    #     self.s_contours_dfs.append(s_contours_df)
-    #     raw_contours = np.concatenate((c_obj1.contour_raw, c_obj2.contour_raw))
-    #     self.raw_contours.append(raw_contours)
-
-    #     area = (c_obj1.area + c_obj2.area) * 0.5
-    #     self.areas.append(area)
-    #     x_center = (c_obj1.center_arr[0] + c_obj2.center_arr[0])*0.5
-    #     y_center = (c_obj1.center_arr[1] + c_obj2.center_arr[1])*0.5
-    #     center_arr = np.array([x_center, y_center])
-    #     print(f'{c_obj1.center_arr} + {c_obj2.center_arr} = {center_arr}')
-    #     self.center_arrays.append(center_arr)
-
     def plot_contours_across_frames(self, file_count, output_img_dir):
         """ Add description """
         fig = plt.figure()
@@ -392,7 +458,7 @@ class CrystalRecog:
         fig_ax1.title.set_text('Contours')
         fig_ax1.title.set_fontsize(12)
         for contour in self.s_contours:
-            fig_ax1.plot(contour[...,0], contour[...,1])
+            fig_ax1.scatter(contour[...,0], contour[...,1])
         fig_ax1.invert_yaxis()
 
         fig_ax2 = fig.add_subplot(gs1[-1, :-1])
@@ -412,34 +478,21 @@ class CrystalRecog:
         fig.savefig(os.path.join(output_img_dir, f'newtest_img{self.count_num}.png'))
         plt.close()
 
-
-
-# MAKE METHOD OF CrystalTracking?
-def euqli_dist(p, q, squared=False):
-    # Calculates the euclidean distance, the "ordinary" distance between two
-    # points. The standard Euclidean distance can be squared in order to place
-    # progressively greater weight on objects that are farther apart. This
-    # frequently used in optimization problems in which distances only have
-    # to be compared.
-    if squared:
-        return ((p[0] - q[0]) ** 2) + ((p[1] - q[1]) ** 2)
-    else:
-        return sqrt(((p[0] - q[0]) ** 2) + ((p[1] - q[1]) ** 2))
-# MAKE METHOD OF CrystalTracking?
 def closest(cur_pos, positions):
-    # FIND THE SOURCE FOR THIS CODE ON STACKOVERFLOW!!
-    low_dist = float('inf')
-    closest_pos = None
-    index = None
-    for index, pos in enumerate(positions):
-        dist = euqli_dist(cur_pos,pos)
-        if dist < low_dist:
-            low_dist = dist
-            closest_pos = pos
-            ret_index = index
-    else: # This breaks the tracking panels, but allows for calculation of volume fraction over time.
-        ret_index = None
-    return closest_pos, ret_index, low_dist
+    """Get the euclidian distance to the closest point to current coordinate
+        and store the closest point and its distance"""
+    dist = spatial.distance.cdist([tuple(cur_pos)], positions)
+    min_dist = dist.min()
+    min_index = dist.tolist()[0].index(min_dist)
+    closest_pos = positions[min_index]
+    return closest_pos, min_index, min_dist
+
+def EUCL_distance(p1, p2):
+    """Calculate the distance between two points"""
+    a = np.array(p1)
+    b = np.array(p2)
+    return np.linalg.norm(a-b)
+
 
 def get_img_files_ordered(dir_i):
     """ Function returns a list of all input frames, ordered by their frame number, 
@@ -494,10 +547,19 @@ def create_frame_list(img_files, file_count, imgs_dir,
             print(f'{file_name} has a different file format than the expected {IMAGE_FORMAT}.')
     return frame_list
 
-def setup_detection_box(target_crys, padding_margin):
-    """ Retreive the upper and lower x and y coordinates, in which a crystal's contour is contained, with 
-    and additional padding margin to be able to detect possible fusions/splits over time. """
-    pass
+def common_COM(p1, a1, p2, a2):
+    """Function that returns that common COM of two objects based on the separate COM's
+        and the areas of the objects"""
+    x1 = p1[0]
+    x2 = p2[0]
+    y1 = p1[1]
+    y2 = p2[1]
+    A = a1 + a2
+
+    x_common = (x1 * a1 + x2 * a2) / A
+    y_common = (y1 * a1 + y2 * a2) / A
+
+    return x_common, y_common
 
 def open_file(path):
     if platform.system() == "Windows":
@@ -743,141 +805,141 @@ if __name__ == "__main__":
 
     img_processing_time = time.time() - start_time # Log time it took to process images.
     
-    # Create initial crystals
-    crystal_tracking_list = []
-    for obj in frame_list[0].crystalobjects:
-        crystal_tracking_list.append(CrystalRecog(obj))
-    print('Frame # 1:')
-    print(f'Used count: {len(crystal_tracking_list)}')
+    # # Create initial crystals
+    # crystal_tracking_list = []
+    # for obj in frame_list[0].crystalobjects:
+    #     crystal_tracking_list.append(CrystalRecog(obj))
+    # print('Frame # 1:')
+    # print(f'Used count: {len(crystal_tracking_list)}')
 
-    # Start from 1 here, because frame 0 / the first frame already done above
-    for i in range(1,len(frame_list)):
-        print(f'Frame # {i+1}:', end='\r')
-        c_central_list = frame_list[i].crystal_centers
-        c_crystal_areas_list = frame_list[i].crystal_areas
-        pre_frame_center_coord_count = len(c_central_list)
-        for target_crys in crystal_tracking_list:
-            # find the coordinates, index of said coordinates, and distance to last center point
-            clostest_coord, index_closest, distance = closest(target_crys.center_arrays[len(target_crys.center_arrays) -1], c_central_list)
-            if distance < MAX_CENTER_DISTANCE:
-                # Find Crystal object corresponding to the central coord
-                for crys in frame_list[i].crystalobjects:
-                    if (crys.center_arr == clostest_coord).all():
-                        if crys.area*(1-AREA_PCT) <= target_crys.areas[len(target_crys.areas) -1] <= crys.area*(1+AREA_PCT):
-                            target_crys.add_crystalobject(crys)
-                            c_central_list.pop(index_closest)
-                            c_crystal_areas_list.remove(crys.area)
+    # # Start from 1 here, because frame 0 / the first frame already done above
+    # for i in range(1,len(frame_list)):
+    #     print(f'Frame # {i+1}:', end='\r')
+    #     c_central_list = frame_list[i].crystal_centers
+    #     c_crystal_areas_list = frame_list[i].crystal_areas
+    #     pre_frame_center_coord_count = len(c_central_list)
+    #     for target_crys in crystal_tracking_list:
+    #         # find the coordinates, index of said coordinates, and distance to last center point
+    #         clostest_coord, index_closest, distance = closest(target_crys.center_arrays[len(target_crys.center_arrays) -1], c_central_list)
+    #         if distance < MAX_CENTER_DISTANCE:
+    #             # Find Crystal object corresponding to the central coord
+    #             for crys in frame_list[i].crystalobjects:
+    #                 if (crys.center_arr == clostest_coord).all():
+    #                     if crys.area*(1-AREA_PCT) <= target_crys.areas[len(target_crys.areas) -1] <= crys.area*(1+AREA_PCT):
+    #                         target_crys.add_crystalobject(crys)
+    #                         c_central_list.pop(index_closest)
+    #                         c_crystal_areas_list.remove(crys.area)
 
-            # else:
-            #     print(f'Attempting to match {target_crys.count_num}')
-            #     target_area = target_crys.areas[len(target_crys.areas) -1]
-            #     for areas in itertools.combinations(c_crystal_areas_list, 2):
-            #         if  target_area*(1-AREA_PCT) <= sum(areas) <= target_area*(1+AREA_PCT):
-            #             print(f'found {sum(areas)} being equal to {target_area} ???')
-            #             index_list = [c_crystal_areas_list.index(area) for area in areas]
-            #             crys_list = []
-            #             for crys in frame_list[i].crystalobjects:
-            #                 for ind in index_list:
-            #                     if crys.area == c_crystal_areas_list[ind]:
-            #                         crys_list.append(crys)
-            #             obj_center_contained = False
-            #             print('**********')
-            #             for crys in crys_list:
-            #                 print(f'---------{len(crys_list)}')
-            #                 if target_crys.min_y*(1-CENTER_PCT) <= crys.center_arr[1] <= target_crys.max_y*(1+CENTER_PCT) and target_crys.min_x*(1-CENTER_PCT) <= crys.center_arr[0] <= target_crys.max_x*(1+CENTER_PCT):
-            #                     print(f'{target_crys.min_y*(1-CENTER_PCT)} <= {crys.center_arr[1]} <= {target_crys.max_y*(1+CENTER_PCT)}')
-            #                     print(f'{target_crys.min_x*(1-CENTER_PCT)} <= {crys.center_arr[0]} <= {target_crys.max_x*(1+CENTER_PCT)}')
-            #                     obj_center_contained = True
-            #                 else:
-            #                     obj_center_contained = False
-            #                     break
-            #             if obj_center_contained == True:
-            #                 print('YAAASS QUEEN')
-            #                 if len(crys_list) == 2:
-            #                     print('doubleeee')
-            #                     target_crys.add_dubble_crystalobject(crys_list[0], crys_list[1])
-            #                 if len(crys_list) == 3:
-            #                     print('T-T-T-T-tripple comboooooooo! Figure this shit out')
-                        # From the crystals in crys_list, find max_x, max_y, etc.
-                        # Check if these values are within min/max y and x of CrystalRecog
+    #         # else:
+    #         #     print(f'Attempting to match {target_crys.count_num}')
+    #         #     target_area = target_crys.areas[len(target_crys.areas) -1]
+    #         #     for areas in itertools.combinations(c_crystal_areas_list, 2):
+    #         #         if  target_area*(1-AREA_PCT) <= sum(areas) <= target_area*(1+AREA_PCT):
+    #         #             print(f'found {sum(areas)} being equal to {target_area} ???')
+    #         #             index_list = [c_crystal_areas_list.index(area) for area in areas]
+    #         #             crys_list = []
+    #         #             for crys in frame_list[i].crystalobjects:
+    #         #                 for ind in index_list:
+    #         #                     if crys.area == c_crystal_areas_list[ind]:
+    #         #                         crys_list.append(crys)
+    #         #             obj_center_contained = False
+    #         #             print('**********')
+    #         #             for crys in crys_list:
+    #         #                 print(f'---------{len(crys_list)}')
+    #         #                 if target_crys.min_y*(1-CENTER_PCT) <= crys.center_arr[1] <= target_crys.max_y*(1+CENTER_PCT) and target_crys.min_x*(1-CENTER_PCT) <= crys.center_arr[0] <= target_crys.max_x*(1+CENTER_PCT):
+    #         #                     print(f'{target_crys.min_y*(1-CENTER_PCT)} <= {crys.center_arr[1]} <= {target_crys.max_y*(1+CENTER_PCT)}')
+    #         #                     print(f'{target_crys.min_x*(1-CENTER_PCT)} <= {crys.center_arr[0]} <= {target_crys.max_x*(1+CENTER_PCT)}')
+    #         #                     obj_center_contained = True
+    #         #                 else:
+    #         #                     obj_center_contained = False
+    #         #                     break
+    #         #             if obj_center_contained == True:
+    #         #                 print('YAAASS QUEEN')
+    #         #                 if len(crys_list) == 2:
+    #         #                     print('doubleeee')
+    #         #                     target_crys.add_dubble_crystalobject(crys_list[0], crys_list[1])
+    #         #                 if len(crys_list) == 3:
+    #         #                     print('T-T-T-T-tripple comboooooooo! Figure this shit out')
+    #                     # From the crystals in crys_list, find max_x, max_y, etc.
+    #                     # Check if these values are within min/max y and x of CrystalRecog
 
-        # For each Crystal:
-            # Set up detection box (Upper and lower x and y coords + some margin)
-            # Find all center points in detection box (Just center points will work?)
-                # Find/identify corresponding crystals
-                # Check if all contour points of identified crystals are in the detection box
-            # Compare area of crystalRecog to previous one.
-                # Evaluate if adding other identified crystals would be closer to previous area, together with checking if the
-                    #combined center point would be closer to the previous center point of the Crystal.
-                        # If yes, loop backwards through frames, and add the additional crystal attributes to crystal Recog
-                        # Then continue in loop as normal
-
-
-        post_frame_center_coord_count = len(c_central_list)
-        # print('------------------------------------------------------')
-        # print(f'Frame # {i + 1}:')
-        # print(f'C coords went from {pre_frame_center_coord_count} to {post_frame_center_coord_count}  ')
-        # print(f'Used count: {pre_frame_center_coord_count - post_frame_center_coord_count }')
-    crystal_linking_time = (time.time() - start_time) - img_processing_time # Log time it took to link crystals
+    #     # For each Crystal:
+    #         # Set up detection box (Upper and lower x and y coords + some margin)
+    #         # Find all center points in detection box (Just center points will work?)
+    #             # Find/identify corresponding crystals
+    #             # Check if all contour points of identified crystals are in the detection box
+    #         # Compare area of crystalRecog to previous one.
+    #             # Evaluate if adding other identified crystals would be closer to previous area, together with checking if the
+    #                 #combined center point would be closer to the previous center point of the Crystal.
+    #                     # If yes, loop backwards through frames, and add the additional crystal attributes to crystal Recog
+    #                     # Then continue in loop as normal
 
 
-    crystal_tracking_count = len(crystal_tracking_list)
-    # for i,crystallcoll in enumerate(crystal_tracking_list):
-    #     if crystallcoll.count_num == 79:
-    #         print(crystallcoll.areas)
+    #     post_frame_center_coord_count = len(c_central_list)
+    #     # print('------------------------------------------------------')
+    #     # print(f'Frame # {i + 1}:')
+    #     # print(f'C coords went from {pre_frame_center_coord_count} to {post_frame_center_coord_count}  ')
+    #     # print(f'Used count: {pre_frame_center_coord_count - post_frame_center_coord_count }')
+    # crystal_linking_time = (time.time() - start_time) - img_processing_time # Log time it took to link crystals
+
+
+    # crystal_tracking_count = len(crystal_tracking_list)
+    # # for i,crystallcoll in enumerate(crystal_tracking_list):
+    # #     if crystallcoll.count_num == 79:
+    # #         print(crystallcoll.areas)
+    # #     print(f'Plotting Crystal {i}/{crystal_tracking_count}', end = '\r')
+    # #     crystallcoll.plot_contours_across_frames(file_count, output_img_dir)
+    # for i,b in enumerate(crystal_tracking_list):
     #     print(f'Plotting Crystal {i}/{crystal_tracking_count}', end = '\r')
-    #     crystallcoll.plot_contours_across_frames(file_count, output_img_dir)
-    for i,b in enumerate(crystal_tracking_list):
-        print(f'Plotting Crystal {i}/{crystal_tracking_count}', end = '\r')
-        if b.c_count > MIN_PLOT_FRAMES:
+    #     if b.c_count > MIN_PLOT_FRAMES:
 
-            space_scale = 86.7*10**(-9) #m
-            gamma_0 = 29.8 #mJ/m^2
-            d_tolman = 0.24*10**(-9) #m
-            solution_thickness = 2*10**(-6)
+    #         space_scale = 86.7*10**(-9) #m
+    #         gamma_0 = 29.8 #mJ/m^2
+    #         d_tolman = 0.24*10**(-9) #m
+    #         solution_thickness = 2*10**(-6)
 
-            fig = plt.figure()
-            fig.tight_layout()
-            gs1 = fig.add_gridspec(nrows=2, ncols=2)
-            fig_ax1 = fig.add_subplot(gs1[0, 0])
-            fig_ax1.title.set_text('Contours')
+    #         fig = plt.figure()
+    #         fig.tight_layout()
+    #         gs1 = fig.add_gridspec(nrows=2, ncols=2)
+    #         fig_ax1 = fig.add_subplot(gs1[0, 0])
+    #         fig_ax1.title.set_text('Contours')
         
-            for contour in b.s_contours: 
-                fig_ax1.plot(contour[...,0], contour[...,1])
-            fig_ax1.invert_yaxis()
-            fig_ax1.title.set_fontsize(12)
-            fig.suptitle(t=f'#{b.count_num}; FU{b.c_count}/{file_count}', fontsize=12, va='top')
+    #         for contour in b.s_contours: 
+    #             fig_ax1.plot(contour[...,0], contour[...,1])
+    #         fig_ax1.invert_yaxis()
+    #         fig_ax1.title.set_fontsize(12)
+    #         fig.suptitle(t=f'#{b.count_num}; FU{b.c_count}/{file_count}', fontsize=12, va='top')
 
-            fig_ax2 = fig.add_subplot(gs1[0, 1])
-            fig_ax2.title.set_text('Area')
-            fig_ax2.plot(np.asarray(b.areas)*space_scale*space_scale*10**12)
-            fig_ax2.set_ylabel('area [um^2]')
-            fig_ax2.set_xlabel('time')
-            fig_ax2.title.set_fontsize(10)
+    #         fig_ax2 = fig.add_subplot(gs1[0, 1])
+    #         fig_ax2.title.set_text('Area')
+    #         fig_ax2.plot(np.asarray(b.areas)*space_scale*space_scale*10**12)
+    #         fig_ax2.set_ylabel('area [um^2]')
+    #         fig_ax2.set_xlabel('time')
+    #         fig_ax2.title.set_fontsize(10)
 
-            fig_ax3 = fig.add_subplot(gs1[1, 0])
-            fig_ax3.title.set_text('Mean curvatures')
-            fig_ax3.plot(np.asarray(b.mean_curvatures)/(space_scale*10**6))
-            fig_ax3.set_ylabel('mean curvature [1/um]')
-            fig_ax3.set_xlabel('time')
-            fig_ax3.title.set_fontsize(10)
+    #         fig_ax3 = fig.add_subplot(gs1[1, 0])
+    #         fig_ax3.title.set_text('Mean curvatures')
+    #         fig_ax3.plot(np.asarray(b.mean_curvatures)/(space_scale*10**6))
+    #         fig_ax3.set_ylabel('mean curvature [1/um]')
+    #         fig_ax3.set_xlabel('time')
+    #         fig_ax3.title.set_fontsize(10)
 
            
 
-            fig_ax4 = fig.add_subplot(gs1[1, 1])
-            fig_ax4.title.set_text('Gibbs surface energy')
-            G = 2* gamma_0*np.asarray(b.areas)*space_scale*space_scale + (gamma_0 * np.asarray(b.lengths) * space_scale* solution_thickness *(1-((np.asarray(b.mean_curvatures)/space_scale) *2*d_tolman)))
-            fig_ax4.plot(G)
-            fig_ax4.set_ylabel('G_total [mJ]')
-            fig_ax4.set_xlabel('time')
-            fig_ax4.title.set_fontsize(10)
+    #         fig_ax4 = fig.add_subplot(gs1[1, 1])
+    #         fig_ax4.title.set_text('Gibbs surface energy')
+    #         G = 2* gamma_0*np.asarray(b.areas)*space_scale*space_scale + (gamma_0 * np.asarray(b.lengths) * space_scale* solution_thickness *(1-((np.asarray(b.mean_curvatures)/space_scale) *2*d_tolman)))
+    #         fig_ax4.plot(G)
+    #         fig_ax4.set_ylabel('G_total [mJ]')
+    #         fig_ax4.set_xlabel('time')
+    #         fig_ax4.title.set_fontsize(10)
 
-            frames_used = ','.join(b.frames_used)
-            fig.text(0.02, 0.02, 'FU: ' + frames_used, color='grey',fontsize=4)
-            fig.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
-                wspace=0.3, hspace=0.5)
-            fig.savefig(os.path.join(output_img_dir, f'newtest_img{b.count_num}.png'))
-            plt.close()
+    #         frames_used = ','.join(b.frames_used)
+    #         fig.text(0.02, 0.02, 'FU: ' + frames_used, color='grey',fontsize=4)
+    #         fig.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
+    #             wspace=0.3, hspace=0.5)
+    #         fig.savefig(os.path.join(output_img_dir, f'newtest_img{b.count_num}.png'))
+    #         plt.close()
 
     times, Q = calculate_volume_fraction(frame_list)
 
@@ -892,11 +954,11 @@ if __name__ == "__main__":
     ROI_area = frame_list[0].img_height * frame_list[0].img_width
     export_quantities(times, Q, N, A, r, r3, ROI_area)
 
-    for i, crystallcoll in enumerate(crystal_tracking_list):
-        df_i = pd.concat(crystallcoll.s_contours_dfs)
-        csv_file_name = f'{crystallcoll.count_num}.csv'
-        csv_export_dir_i = os.path.join(csv_export_dir, csv_file_name)
-        df_i.to_csv(csv_export_dir_i)
+    # for i, crystallcoll in enumerate(crystal_tracking_list):
+    #     df_i = pd.concat(crystallcoll.s_contours_dfs)
+    #     csv_file_name = f'{crystallcoll.count_num}.csv'
+    #     csv_export_dir_i = os.path.join(csv_export_dir, csv_file_name)
+    #     df_i.to_csv(csv_export_dir_i)
         
 
 
@@ -904,7 +966,7 @@ if __name__ == "__main__":
     print('######################################################')
     print(f'{os.path.basename(INPUT_FOLDER_NAME)} done.')
     print(f'img processing time: {img_processing_time} ')
-    print(f'Crystal linking time : {crystal_linking_time}')
+    # print(f'Crystal linking time : {crystal_linking_time}')
     print("Total runtime --- %s seconds ---" % (time.time() - start_time)) # To see how long program
     print('######################################################')
 
