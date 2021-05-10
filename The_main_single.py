@@ -260,6 +260,7 @@ class FrameImg:
         plt.imshow(org_img)
         for crystal in self.crystalobjects:
             plt.scatter(crystal.s_contours[...,0], crystal.s_contours[...,1], s=0.05, color='red')
+            # plt.plot(crystal.s_contours[...,0], crystal.s_contours[...,1], color='red')
             # plt.scatter(crystal.center_arr[0],crystal.center_arr[1], s=2)
         fig.suptitle(frame_img_name, fontsize = 8)
         if save_image:
@@ -600,10 +601,9 @@ def calculate_volume_fraction(frame_list):
     print("Calculating volume fractions.")
     ice_volume_fraction_list = []
     times = []
+    
     for frame in frame_list:
-        tot_area = 0
-        for crystal in frame.crystalobjects:
-            tot_area += crystal.area
+        tot_area = np.sum([crystal.area for crystal in frame.crystalobjects])
         ROI_area = frame.img_width * frame.img_height
         ice_volume_fraction = tot_area / ROI_area # Assuming tot_area and ROI_area have the same units.
         ice_volume_fraction_list.append(ice_volume_fraction)
