@@ -21,6 +21,7 @@ from tkinter import *
 import csv
 import platform
 import subprocess
+from glob import glob
 
 class FrameImg:
     ''' Add Description '''
@@ -243,7 +244,8 @@ class FrameImg:
             org_img = mpimg.imread(os.path.join(self.file_path,self.file_name))
         plt.imshow(org_img)
         for crystal in self.crystalobjects:
-            plt.plot(crystal.s_contours[...,0], crystal.s_contours[...,1],'k', linewidth=1)
+            # plt.plot(crystal.s_contours[...,0], crystal.s_contours[...,1],'k', linewidth=1)
+            plt.scatter(crystal.s_contours[...,0], crystal.s_contours[...,1], s=0.05, color='red')
             # plt.scatter(crystal.center_arr[0],crystal.center_arr[1], s=2)
         fig.suptitle(frame_img_name, fontsize = 8)
         if save_image:
@@ -715,8 +717,9 @@ if __name__ == "__main__":
     CSV_EXPORT_FOLDER = os.path.join(INPUT_FOLDER_NAME, os.path.join(os.pardir, os.pardir, 'csv', os.path.basename(INPUT_FOLDER_NAME)))
 
     # Thresholding
-    threshold_blocksize = 35
-    threshold_constant = 5
+    # 599 and 0 are 'okay' for 0uM 10% for example
+    threshold_blocksize = int(input('Threshold blocksize: '))
+    threshold_constant = int(input('Threshold subtraction constant: '))
 
     MAX_CENTER_DISTANCE = 0
     AREA_PCT = 0
