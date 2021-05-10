@@ -735,6 +735,12 @@ if __name__ == "__main__":
     frame_list = create_frame_list(img_files, file_count, imgs_dir,
         output_img_dir, IMAGE_FORMAT, PLOT_FRAME_CONTOURS)
 
+    # Write settings to file.
+    with open(os.path.join(IMAGE_OUTPUT_FOLDER_NAME, 'settings.txt'), 'w') as settings_file:
+        settings_file.write('Adaptive thresholding\n')
+        settings_file.write(f'\tblockSize = {threshold_blocksize}\n')
+        settings_file.write(f'\tconstant = {threshold_constant}\n')
+
     img_processing_time = time.time() - start_time # Log time it took to process images.
     
     # Create initial crystals
