@@ -43,8 +43,7 @@ def fitting(df):
     df['Nt_err'], df.N0_err = N_err
     print(f"N = a*x + b, a={round(N_opt[0], 2)} +/- {round(N_err[0], 2)}, b={round(N_opt[1], 2)} +/- {round(N_err[1], 2)}.")
 
-    df.drop(['Unnamed: 0'], axis=1)
-    df.to_csv(path)
+    df.to_csv(path, index_label='index')
 
     return df
 
@@ -95,7 +94,7 @@ path = filedialog.askopenfilename(title = "Select data file")
 root.destroy()
 # path = r'E:\Ice\analysis\0uM_X_10%_0\0uM_X_10%_0.csv'
 
-df = pd.read_csv(path).dropna() # Drop rows which have at least one NaN.
+df = pd.read_csv(path, index_col='index').dropna() # Drop rows which have at least one NaN.
 df.times = df.times * 13 / 21.52 # Correct for faster playback speed.
 
 df = fitting(df)

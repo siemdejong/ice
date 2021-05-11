@@ -793,7 +793,7 @@ def export_quantities(times, Q, N, A, r, r3, l, ROI_area):
         'ROI_area': ROI_area
     }
     df = pd.DataFrame(data)
-    df.to_csv(os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.path.basename(IMAGE_OUTPUT_FOLDER_NAME) + '.csv'))
+    df.to_csv(os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.path.basename(IMAGE_OUTPUT_FOLDER_NAME) + '.csv'), index_label='index')
 
 
 if __name__ == "__main__":
