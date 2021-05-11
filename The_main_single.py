@@ -746,8 +746,41 @@ def mean_radius3(frame_list):
 
     return mean_radius3_list
 
+def circumference(frame_list):
+    """Plot the mean circumference of the crystals in the ROI."""
+    print("Calculating mean circumference per time.")
 
-def export_quantities(times, Q, N, A, r, r3, ROI_area):
+    def calculate_mean_circumference(frame):
+        """Calculate the mean circumference per frame."""
+        mean_circ = np.mean([crystal.length for crystal in frame.crystalobjects])
+        return mean_circ
+    
+    def plot_mean_circ(mean_circ_list, times):
+        """Plot the mean circumference per time."""
+        space_scale = 86.7*10**(-9) #m
+
+        fig_mean_circ = plt.figure()
+        fig_mean_circ.tight_layout()
+        gs_mean_circ = fig_mean_circ.add_gridspec(nrows=1, ncols=1)
+        fig_mean_circ_ax = fig_mean_circ.add_subplot(gs_mean_circ[0, 0])
+        # fig_volume_fraction_ax.title.set_text(frame_list[0].imgs_dir)
+        fig_mean_circ_ax.scatter(times, np.asarray(mean_circ_list)*space_scale*1e6)
+        fig_mean_circ_ax.set_ylabel(r'Mean circumference [$\mu$m]')
+        fig_mean_circ_ax.set_xlabel('Time [s]')
+        fig_mean_circ.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
+                    wspace=0.3, hspace=0.5)
+        fig_mean_circ.savefig(os.path.join(output_img_dir, 'mean_circumference.png'), bbox_inches='tight')
+        plt.close()
+
+    mean_circumference_list = list(map(calculate_mean_circumference, frame_list))
+    times = [float(frame.file_name.split('s')[0]) for frame in frame_list]
+
+    plot_mean_circ(mean_circumference_list, times)
+
+    return mean_circumference_list
+
+
+def export_quantities(times, Q, N, A, r, r3, l, ROI_area):
     """Export the calculated quantities to csv."""
     data = {
         'times': times,
@@ -756,10 +789,11 @@ def export_quantities(times, Q, N, A, r, r3, ROI_area):
         'A': A,
         'r': r,
         'r3': r3,
+        'l': l,
         'ROI_area': ROI_area
     }
     df = pd.DataFrame(data)
-    df.to_csv(os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.path.basename(IMAGE_OUTPUT_FOLDER_NAME) + '.csv'), )
+    df.to_csv(os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.path.basename(IMAGE_OUTPUT_FOLDER_NAME) + '.csv'))
 
 
 if __name__ == "__main__":
@@ -951,8 +985,10 @@ if __name__ == "__main__":
 
     r3 = mean_radius3(frame_list)
 
+    l = circumference(frame_list)
+
     ROI_area = frame_list[0].img_height * frame_list[0].img_width
-    export_quantities(times, Q, N, A, r, r3, ROI_area)
+    export_quantities(times, Q, N, A, r, r3, l, ROI_area)
 
     # for i, crystallcoll in enumerate(crystal_tracking_list):
     #     df_i = pd.concat(crystallcoll.s_contours_dfs)
