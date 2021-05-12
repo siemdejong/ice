@@ -13,7 +13,7 @@ def linear_func(x, a, b):
 def horizontal_func(x, b):
     return 0 * x + b
 
-def fitting(df):
+def fitting(df, path):
     """Fit through the data."""
     # Ice volume fraction Q.
     Q_opt, Q_cov = curve_fit(horizontal_func, df.times, df.Q)
@@ -47,7 +47,7 @@ def fitting(df):
 
     return df
 
-def plot(df):
+def plot(df, path, show=False):
     """Plot the data together with the fit."""
     fig, axs = plt.subplots(2, 2)
 
@@ -87,15 +87,17 @@ def plot(df):
     plt.tight_layout()
     fig.savefig(os.path.join(os.path.dirname(path), 'fits.png'))
 
-    plt.show()
+    if show:
+        plt.show()
 
-root = Tk() # File dialog
-path = filedialog.askopenfilename(title = "Select data file")
-root.destroy()
-# path = r'E:\Ice\analysis\0uM_X_10%_0\0uM_X_10%_0.csv'
+if __name__ == '__main__':
+    root = Tk() # File dialog
+    path = filedialog.askopenfilename(title = "Select data file")
+    root.destroy()
+    # path = r'E:\Ice\analysis\0uM_X_10%_0\0uM_X_10%_0.csv'
 
-df = pd.read_csv(path, index_col='index').dropna() # Drop rows which have at least one NaN.
-df.times = df.times * 13 / 21.52 # Correct for faster playback speed.
+    df = pd.read_csv(path, index_col='index').dropna() # Drop rows which have at least one NaN.
+    df.times = df.times * 13 / 21.52 # Correct for faster playback speed.
 
-df = fitting(df)
-plot(df)
+    df = fitting(df)
+    plot(df)

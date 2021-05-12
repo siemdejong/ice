@@ -22,6 +22,7 @@ import csv
 import platform
 import subprocess
 from glob import glob
+import fit_data
 
 class FrameImg:
     ''' Add Description '''
@@ -990,14 +991,22 @@ if __name__ == "__main__":
     ROI_area = frame_list[0].img_height * frame_list[0].img_width
     export_quantities(times, Q, N, A, r, r3, l, ROI_area)
 
+    try:
+        df_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.path.basename(IMAGE_OUTPUT_FOLDER_NAME) + '.csv')
+        df = pd.read_csv(df_path, index_col='index').dropna() # Drop rows which have at least one NaN.
+        df.times = df.times * 13 / 21.52 # Correct for faster playback speed.
+
+        df = fit_data.fitting(df, df_path)
+        fit_data.plot(df, df_path)
+        print("Successfully fitted.")
+    except FileNotFoundError:
+        print("Cannot fit, because fit_data.py is missing.")
+
     # for i, crystallcoll in enumerate(crystal_tracking_list):
     #     df_i = pd.concat(crystallcoll.s_contours_dfs)
     #     csv_file_name = f'{crystallcoll.count_num}.csv'
     #     csv_export_dir_i = os.path.join(csv_export_dir, csv_file_name)
     #     df_i.to_csv(csv_export_dir_i)
-        
-
-
 
     print('######################################################')
     print(f'{os.path.basename(INPUT_FOLDER_NAME)} done.')
