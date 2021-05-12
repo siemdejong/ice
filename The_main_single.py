@@ -316,12 +316,14 @@ class CrystalObject:
                 self.x_center_child = 0
                 self.y_center_child = 0
             # calculate common COM, assuming uniform thickness and density
-            a1 = cv2.contourArea(self.contour_raw) - cv2.contourArea(self.child_contour_raw)
-            a2 = cv2.contourArea(self.child_contour_raw)
+            a = cv2.contourArea(self.contour_raw) # outer area
+            a1 = cv2.contourArea(self.child_contour_raw) # hole area
+            a2 = a - a1 # crystal area
             # print(f'moments (parent, child): {self.moments}, {self.child_moments}')
             # print(f"before any computation the center of parent is ({self.x_center, self.y_center})")
-            self.x_center = (a1 * self.x_center - a2 * self.x_center_child) / (a1 - a2)
-            self.y_center = (a1 * self.y_center - a2 * self.y_center_child) / (a1 - a2)
+            # print(a1, a2, cv2.contourArea(self.contour_raw), cv2.contourArea(self.child_contour_raw))
+            self.x_center = (a * self.x_center - a1 * self.x_center_child) / (a2)
+            self.y_center = (a * self.y_center - a1 * self.y_center_child) / (a2)
             # print(f"After computation the center of parent now is is ({self.x_center, self.y_center})")
 
         self.center_arr = np.array([self.x_center, self.y_center])
