@@ -25,8 +25,8 @@ def extract_Q(df):
             'IBP_conc': int(exp_name[0][:-2]),
             'IBP': exp_name[1],
             'sucrose_conc': int(exp_name[2][:-1]),
-            'Q_opt': float(exp_df['Q_opt'][0]),
-            'Q_err': float(exp_df['Q_err'][0])
+            'Q_opt': float(exp_df['Q_opt'].sample()),
+            'Q_err': float(exp_df['Q_err'].sample())
         }
         df = df.append(data, ignore_index=True)
     
