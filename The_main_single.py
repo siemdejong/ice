@@ -33,9 +33,9 @@ class FrameImg:
         ROI_crop = None
     else:
         ylow = ROI_crop[1]
-        yup = ROI_crop[1] + FrameImg.ROI_crop[3]
+        yup = ROI_crop[1] + ROI_crop[3]
         xleft = ROI_crop[0]
-        xright = ROI_crop[0] + FrameImg.ROI_crop[2]
+        xright = ROI_crop[0] + ROI_crop[2]
 
     def __init__(self, file_name, file_path = os.getcwd(), frame_num = 1):
         self.file_name = file_name
@@ -480,20 +480,20 @@ class CrystalRecog:
         fig.savefig(os.path.join(output_img_dir, f'newtest_img{self.count_num}.png'))
         plt.close()
 
-def closest(cur_pos, positions):
-    """Get the euclidian distance to the closest point to current coordinate
-        and store the closest point and its distance"""
-    dist = spatial.distance.cdist([tuple(cur_pos)], positions)
-    min_dist = dist.min()
-    min_index = dist.tolist()[0].index(min_dist)
-    closest_pos = positions[min_index]
-    return closest_pos, min_index, min_dist
+# def closest(cur_pos, positions):
+#     """Get the euclidian distance to the closest point to current coordinate
+#         and store the closest point and its distance"""
+#     dist = spatial.distance.cdist([tuple(cur_pos)], positions)
+#     min_dist = dist.min()
+#     min_index = dist.tolist()[0].index(min_dist)
+#     closest_pos = positions[min_index]
+#     return closest_pos, min_index, min_dist
 
-def EUCL_distance(p1, p2):
-    """Calculate the distance between two points"""
-    a = np.array(p1)
-    b = np.array(p2)
-    return np.linalg.norm(a-b)
+# def EUCL_distance(p1, p2):
+#     """Calculate the distance between two points"""
+#     a = np.array(p1)
+#     b = np.array(p2)
+#     return np.linalg.norm(a-b)
 
 
 def get_img_files_ordered(dir_i):
@@ -830,14 +830,15 @@ if __name__ == "__main__":
     csv_export_dir = set_and_check_folder(CSV_EXPORT_FOLDER, True)
     img_files, file_count = get_img_files_ordered(imgs_dir)
     open_file(IMAGE_OUTPUT_FOLDER_NAME)
-    frame_list = create_frame_list(img_files, file_count, imgs_dir,
-        output_img_dir, IMAGE_FORMAT, PLOT_FRAME_CONTOURS)
 
     # Write settings to file.
     with open(os.path.join(IMAGE_OUTPUT_FOLDER_NAME, 'settings.txt'), 'w') as settings_file:
         settings_file.write('Adaptive thresholding\n')
         settings_file.write(f'\tblockSize = {threshold_blocksize}\n')
         settings_file.write(f'\tconstant = {threshold_constant}\n')
+
+    frame_list = create_frame_list(img_files, file_count, imgs_dir,
+        output_img_dir, IMAGE_FORMAT, PLOT_FRAME_CONTOURS)
 
     img_processing_time = time.time() - start_time # Log time it took to process images.
     
@@ -1005,7 +1006,9 @@ if __name__ == "__main__":
         try:
             import plot_Q
             print("Plotting Q's.")
-            plot_Q.plot_Q(df)
+            Q_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.pardir)
+            df_Q = plot_Q.extract_Q(Q_path)
+            plot_Q.plot_Q(df_Q)
         except FileNotFoundError:
             print("Cannot plot Q's, because plot_Q.py is missing.")
     except FileNotFoundError:

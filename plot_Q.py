@@ -16,9 +16,11 @@ import os
 #         IBP = experiment[1]
 #         sucrose_conc = experiment[2][:-1]
 
-def extract_Q(df):
+def extract_Q(path):
     """Extract ice volume fraction information and fit results from csv file."""
-    for csv_file_path in glob(os.path.join(INPUT_FOLDER_NAME, '*[!test]', '*.csv')):
+    df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'Q_opt', 'Q_err'])
+
+    for csv_file_path in glob(os.path.join(path, '*[!test]', '*.csv')):
         exp_df = pd.read_csv(csv_file_path, index_col='index').dropna()
         exp_name = os.path.splitext(os.path.basename(csv_file_path))[0].split('_')
         data = {
@@ -52,20 +54,22 @@ def plot_Q(df):
 
     # Plot the data.
     for data, ax in zip([df_X_0, df_X_0], axs):
-        ax.plot(data['sucrose_conc'], data['Q_opt'], label="0uM")
+        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="0uM")
     for data, ax in zip([df_WT_1, df_T18N_1], axs):
-        ax.plot(data['sucrose_conc'], data['Q_opt'], label="1uM")
+        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="1uM")
     for data, ax in zip([df_WT_4, df_T18N_4], axs):
-        ax.plot(data['sucrose_conc'], data['Q_opt'], label="4uM")
+        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="4uM")
     for data, ax in zip([df_WT_10, df_T18N_10], axs):
-        ax.plot(data['sucrose_conc'], data['Q_opt'], label="10uM")
+        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="10uM")
 
     # Settings for the axes.
     for title, ax in zip(['WT', 'T18N'], axs):
         ax.set_title(title)
         ax.legend()
         ax.set_yticks(np.arange(0, 1.1, .1))
-        ax.set_xticks(np.arange(10, 50, 10))
+        ax.set_xticks(np.arange(10, 40, 10))
+        ax.set_xlabel(r"[C$_{12}$H$_{22}$O$_{11}$] [% w/w]")
+    axs[0].set_ylabel("Q")
 
     plt.show()
 
@@ -76,6 +80,5 @@ if __name__ == '__main__':
     # root.destroy()
     INPUT_FOLDER_NAME = r'E:\Ice\analysis'
 
-    df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'Q_opt', 'Q_err'])
-    df = extract_Q(df)
+    df = extract_Q(INPUT_FOLDER_NAME)
     plot_Q(df)
