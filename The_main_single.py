@@ -830,14 +830,15 @@ if __name__ == "__main__":
     csv_export_dir = set_and_check_folder(CSV_EXPORT_FOLDER, True)
     img_files, file_count = get_img_files_ordered(imgs_dir)
     open_file(IMAGE_OUTPUT_FOLDER_NAME)
-    frame_list = create_frame_list(img_files, file_count, imgs_dir,
-        output_img_dir, IMAGE_FORMAT, PLOT_FRAME_CONTOURS)
 
     # Write settings to file.
     with open(os.path.join(IMAGE_OUTPUT_FOLDER_NAME, 'settings.txt'), 'w') as settings_file:
         settings_file.write('Adaptive thresholding\n')
         settings_file.write(f'\tblockSize = {threshold_blocksize}\n')
         settings_file.write(f'\tconstant = {threshold_constant}\n')
+
+    frame_list = create_frame_list(img_files, file_count, imgs_dir,
+        output_img_dir, IMAGE_FORMAT, PLOT_FRAME_CONTOURS)
 
     img_processing_time = time.time() - start_time # Log time it took to process images.
     
@@ -1005,7 +1006,9 @@ if __name__ == "__main__":
         try:
             import plot_Q
             print("Plotting Q's.")
-            plot_Q.plot_Q(df)
+            Q_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.pardir)
+            df_Q = plot_Q.extract_Q(Q_path)
+            plot_Q.plot_Q(df_Q)
         except FileNotFoundError:
             print("Cannot plot Q's, because plot_Q.py is missing.")
     except FileNotFoundError:
