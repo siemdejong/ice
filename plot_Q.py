@@ -57,7 +57,6 @@ def plot_Q(df):
         ax.plot(data['sucrose_conc'], data['Q_opt'], label="1uM")
     for data, ax in zip([df_WT_4, df_T18N_4], axs):
         ax.plot(data['sucrose_conc'], data['Q_opt'], label="4uM")
-        print(data)
     for data, ax in zip([df_WT_10, df_T18N_10], axs):
         ax.plot(data['sucrose_conc'], data['Q_opt'], label="10uM")
 
