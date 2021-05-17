@@ -322,8 +322,9 @@ class CrystalObject:
             # print(f'moments (parent, child): {self.moments}, {self.child_moments}')
             # print(f"before any computation the center of parent is ({self.x_center, self.y_center})")
             # print(a1, a2, cv2.contourArea(self.contour_raw), cv2.contourArea(self.child_contour_raw))
-            self.x_center = (a * self.x_center - a1 * self.x_center_child) / (a2)
-            self.y_center = (a * self.y_center - a1 * self.y_center_child) / (a2)
+            if a2 > 0:
+                self.x_center = (a * self.x_center - a1 * self.x_center_child) / (a2)
+                self.y_center = (a * self.y_center - a1 * self.y_center_child) / (a2)
             # print(f"After computation the center of parent now is is ({self.x_center, self.y_center})")
 
         self.center_arr = np.array([self.x_center, self.y_center])
@@ -1011,7 +1012,7 @@ if __name__ == "__main__":
             print("Plotting Q's.")
             Q_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.pardir)
             df_Q = plot_Q.extract_Q(Q_path)
-            plot_Q.plot_Q(df_Q)
+            plot_Q.plot_Q(df_Q, Q_path)
         except FileNotFoundError:
             print("Cannot plot Q's, because plot_Q.py is missing.")
     except FileNotFoundError:

@@ -34,7 +34,7 @@ def extract_Q(path):
     
     return df
 
-def plot_Q(df):
+def plot_Q(df, output_plot_dir):
     """Plot the Q over time with different lines for different IBP concentration."""
     fig = plt.figure()
     gs = fig.add_gridspec(1, 2, hspace=0, wspace=0)
@@ -65,11 +65,13 @@ def plot_Q(df):
     # Settings for the axes.
     for title, ax in zip(['WT', 'T18N'], axs):
         ax.set_title(title)
-        ax.legend()
         ax.set_yticks(np.arange(0, 1.1, .1))
         ax.set_xticks(np.arange(10, 40, 10))
         ax.set_xlabel(r"[C$_{12}$H$_{22}$O$_{11}$] [% w/w]")
     axs[0].set_ylabel("Q")
+    axs[1].legend()
+
+    fig.savefig(os.path.join(output_plot_dir, 'volume fractions summary.png'), bbox_inches='tight')
 
     plt.show()
 
@@ -79,6 +81,7 @@ if __name__ == '__main__':
     # INPUT_FOLDER_NAME =  filedialog.askdirectory(title = "Select directory")
     # root.destroy()
     INPUT_FOLDER_NAME = r'E:\Ice\analysis'
+    OUTPUT_FOLDER_NAME = INPUT_FOLDER_NAME
 
     df = extract_Q(INPUT_FOLDER_NAME)
-    plot_Q(df)
+    plot_Q(df, OUTPUT_FOLDER_NAME)
