@@ -7,15 +7,6 @@ from tkinter import filedialog
 from tkinter import *
 import os
 
-# def make_df():
-#     """Make the dataframe."""
-#     for csv_file_path in glob(os.path.join(INPUT_FOLDER_NAME, '*[!test]', '*.csv')):
-#         df = pd.read_csv(csv_file_path, index_col='index').dropna()
-#         experiment = os.path.splitext(os.path.basename(csv_file_path))[0].split('_')
-#         IBP_conc = experiment[0][:-2]
-#         IBP = experiment[1]
-#         sucrose_conc = experiment[2][:-1]
-
 def extract_Q(path):
     """Extract ice volume fraction information and fit results from csv file."""
     df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'Q_opt', 'Q_err'])
