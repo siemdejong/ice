@@ -1002,6 +1002,7 @@ if __name__ == "__main__":
         df_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.path.basename(IMAGE_OUTPUT_FOLDER_NAME) + '.csv')
         df = pd.read_csv(df_path, index_col='index').dropna() # Drop rows which have at least one NaN.
         df.times = df.times * 13 / 21.52 # Correct for faster playback speed.
+        df['time_corrected'] = True
 
         print("Fitting parameters.")
         df = fit_data.fitting(df, df_path)
@@ -1015,6 +1016,15 @@ if __name__ == "__main__":
             plot_Q.plot_Q(df_Q, Q_path)
         except FileNotFoundError:
             print("Cannot plot Q's, because plot_Q.py is missing.")
+        
+        try:
+            import plot_A
+            print("Plotting A's.")
+            A_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.pardir)
+            df_A = plot_Q.extract_Q(A_path)
+            plot_Q.plot_Q(df_A, A_path)
+        except FileNotFoundError:
+            print("Cannot plot A's, because plot_A.py is missing.")
     except FileNotFoundError:
         print("Cannot fit, because fit_data.py is missing.")
 
