@@ -104,7 +104,7 @@ def plot_r3(dfs, output_plot_dir):
     axs[0][1].set_xlabel("20% w/w sucrose")
     axs[0][2].set_xlabel("30% w/w sucrose")
 
-    fig.savefig(os.path.join(output_plot_dir, 'area summary'), bbox_inches='tight')
+    fig.savefig(os.path.join(output_plot_dir, 'r3 summary'), bbox_inches='tight')
     plt.show()
 
 
