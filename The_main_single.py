@@ -25,8 +25,8 @@ from glob import glob
 
 class FrameImg:
     ''' Add Description '''
-    # ROI_crop = [xleft, yleft, dx, dy]
-
+    # ROI_crop = [xleft, ylow, dx, dy]
+    
     crop_boo = True
 
     if 'ROI_crop' not in locals():
@@ -87,6 +87,7 @@ class FrameImg:
 
         self.img_attributes(img)
         img_denoised = self.denoise_img(img)
+        # img_denoised = self.sharpen_img(img_denoised)
         img_treshold = self.tresholding_img(img_denoised)
         # self.plot_stages(img, img_denoised, img_treshold)
         # Add in possible plot stages method here before the images go out of scope.
@@ -1021,10 +1022,19 @@ if __name__ == "__main__":
             import plot_A
             print("Plotting A's.")
             A_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.pardir)
-            df_A = plot_Q.extract_Q(A_path)
-            plot_Q.plot_Q(df_A, A_path)
+            df_A = plot_A.extract_Q(A_path)
+            plot_A.plot_A(df_A, A_path)
         except FileNotFoundError:
             print("Cannot plot A's, because plot_A.py is missing.")
+
+        try:
+            import plot_r3
+            print("Plotting r^3.")
+            r3_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.pardir)
+            df_r3 = plot_r3.extract_Q(r3_path)
+            plot_r3.plot_r3(df_A, r3_path)
+        except FileNotFoundError:
+            print("Cannot plot r^3, because plot_r3.py is missing.")
     except FileNotFoundError:
         print("Cannot fit, because fit_data.py is missing.")
 
