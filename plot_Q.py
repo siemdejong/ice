@@ -11,7 +11,7 @@ def extract_Q(path):
     """Extract ice volume fraction information and fit results from csv file."""
     df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'Q_opt', 'Q_err'])
 
-    for csv_file_path in glob(os.path.join(path, '*[!test]', '*.csv')):
+    for csv_file_path in glob(os.path.join(path, '*[!test]', '*[!x].csv')):
         exp_df = pd.read_csv(csv_file_path, index_col='index').dropna()
         exp_name = os.path.splitext(os.path.basename(csv_file_path))[0].split('_')
         data = {
