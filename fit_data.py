@@ -16,6 +16,9 @@ def horizontal_func(x, b):
 def jmak_func(t, a, t0, tau, m):
     return a * (1 - np.exp(-((t - 0) / tau)**m))
 
+def exp_decrease_func(t, N0, t0, tau, N_end):
+    return N0 * np.exp(-(t - t0) / tau) + N_end
+
 def fitting(df, path):
     """Fit through the data."""
     # Ice volume fraction Q.
@@ -24,16 +27,17 @@ def fitting(df, path):
     Q_err = np.sqrt(np.diag(Q_cov))
     df['Q_opt'] = Q_opt[0]
     df['Q_err'] = Q_err[0]
-    df['t0_opt'] = Q_opt[1]
-    df['t0_err'] = Q_err[1]
-    df['tau_opt'] = Q_opt[2]
-    df['tau_err'] = Q_err[2]
-    df['m_opt'] = Q_opt[2]
-    df['m_err'] = Q_err[2]
+    df['Q_t0_opt'] = Q_opt[1]
+    df['Q_t0_err'] = Q_err[1]
+    df['Q_tau_opt'] = Q_opt[2]
+    df['Q_tau_err'] = Q_err[2]
+    df['Q_m_opt'] = Q_opt[2]
+    df['Q_m_err'] = Q_err[2]
     print(f"Q = {round(Q_opt[0], 3)} +/- {round(Q_err[0], 3)}.")
     print(f"t0 = {round(Q_opt[1], 3)} +/- {round(Q_err[1], 3)}.")
     print(f"tau = {round(Q_opt[2], 3)} +/- {round(Q_err[2], 3)}.")
     print(f"m = {round(Q_opt[3], 3)} +/- {round(Q_err[3], 3)}.")
+    print("-------------")
 
     # Mean area A.
     A_opt, A_cov = curve_fit(linear_func, df.times, df.A)
@@ -50,11 +54,18 @@ def fitting(df, path):
     print(f"<r>^3 = a*x + b, a={round(r3_opt[0], 2)} +/- {round(r3_err[0], 2)}, b={round(r3_opt[1], 2)} +/- {round(r3_err[1], 2)}.")
 
     # Number of crystals N.
-    N_opt, N_cov = curve_fit(linear_func, df.times, df.N)
+    # N_opt, N_cov = curve_fit(linear_func, df.times, df.N)
+    N_opt, N_cov = curve_fit(exp_decrease_func, df.times, df.N, [60, 0, 100, 10], bounds=([0, -np.inf, -np.inf, 0], [100, np.inf, np.inf, 100]), maxfev = 100000)
     N_err = np.sqrt(np.diag(N_cov))
-    df['Nt_opt'], df['N0_opt'] = N_opt
-    df['Nt_err'], df['N0_err'] = N_err
-    print(f"N = a*x + b, a={round(N_opt[0], 2)} +/- {round(N_err[0], 2)}, b={round(N_opt[1], 2)} +/- {round(N_err[1], 2)}.")
+    df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'] = N_opt
+    df['N0_err'], df['N_t0_err'], df['N_tau_err'], df['N_end_err'] = N_err
+    # print(f"N = a*x + b, a={round(N_opt[0], 2)} +/- {round(N_err[0], 2)}, b={round(N_opt[1], 2)} +/- {round(N_err[1], 2)}.")
+    print("N:")
+    print(f"N0 = {round(N_opt[0], 3)} +/- {round(N_err[0], 3)}.")
+    print(f"t0 = {round(N_opt[1], 3)} +/- {round(N_err[1], 3)}.")
+    print(f"tau = {round(N_opt[2], 3)} +/- {round(N_err[2], 3)}.")
+    print(f"N_end = {round(N_opt[3], 3)} +/- {round(N_err[3], 3)}.")
+
 
     df.to_csv(path, index_label='index')
 
@@ -69,7 +80,7 @@ def plot(df, path, show=False):
     # Ice volume fraction Q.
     axs[0][0].set_title("Q")
     # Q_est = horizontal_func(df.times, df.Q_opt)
-    Q_est = jmak_func(df.times, df.Q_opt, df.t0_opt, df.tau_opt, df.m_opt)
+    Q_est = jmak_func(df.times, df.Q_opt, df.Q_t0_opt, df.Q_tau_opt, df.Q_m_opt)
     axs[0][0].scatter(df.times, df.Q, s=0.8, c='k', label="data")    
     axs[0][0].plot(df.times, Q_est, 'r', label="fit")
     axs[0][0].set_ylim([0, 1])
@@ -89,7 +100,8 @@ def plot(df, path, show=False):
 
     # Number of crystals N.
     axs[1][1].set_title("N")
-    N_est = linear_func(df.times, df.Nt_opt, df.N0_opt)
+    # N_est = linear_func(df.times, df.Nt_opt, df.N0_opt)
+    N_est = exp_decrease_func(df.times, df.N0_opt, df.N_t0_opt, df.N_tau_opt, df.N_end_opt)
     axs[1][1].scatter(df.times, df.N, s=0.8, c='k', label="data")
     axs[1][1].plot(df.times, N_est, 'r', label="fit")
     # y_err = np.sqrt((xdata * p_err[0])**2 + (p_err[0] * np.std(xdata))**2 + (p_err[1])**2) # Calculate error for linear fits.
