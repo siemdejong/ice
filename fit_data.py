@@ -20,7 +20,7 @@ def fitting(df, path):
     """Fit through the data."""
     # Ice volume fraction Q.
     # Q_opt, Q_cov = curve_fit(horizontal_func, df.times, df.Q)
-    Q_opt, Q_cov = curve_fit(jmak_func, df.times, df.Q, [0.5, 0, 100, 2], bounds=([0, 0, 0, 2], [1, df.times.iat[-1], df.times.iat[-1], 3]), maxfev=1000000)
+    Q_opt, Q_cov = curve_fit(jmak_func, df.times, df.Q, [0.5, 0, 100, 2], bounds=([0, -np.inf, -np.inf, 2], [1, df.times.iat[-1], df.times.iat[-1], 3]), maxfev=1000000)
     Q_err = np.sqrt(np.diag(Q_cov))
     df['Q_opt'] = Q_opt[0]
     df['Q_err'] = Q_err[0]
