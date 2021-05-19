@@ -1035,6 +1035,15 @@ if __name__ == "__main__":
             plot_r3.plot_r3(df_A, r3_path)
         except FileNotFoundError:
             print("Cannot plot r^3, because plot_r3.py is missing.")
+
+        try:
+            import plot_k
+            print("Plotting r^3.")
+            k_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.pardir)
+            df_k = plot_k.extract_k(k_path)
+            plot_k.plot_k(df_k, k_path)
+        except FileNotFoundError:
+            print("Cannot plot k, because plot_k.py is missing.")
     except FileNotFoundError:
         print("Cannot fit, because fit_data.py is missing.")
 
