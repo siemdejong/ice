@@ -621,7 +621,7 @@ def plot_crystal_numbers_per_ROIarea(crystal_numbers_per_px2, times, area=100):
     gs_vol_frac = fig_crystal_numbers.add_gridspec(nrows=1, ncols=1)
     fig_crystal_numbers_ax = fig_crystal_numbers.add_subplot(gs_vol_frac[0, 0])
     # fig_volume_fraction_ax.title.set_text(frame_list[0].imgs_dir)
-    fig_crystal_numbers_ax.scatter(times, crystal_numbers_per_px2 / space_scale**2 * 1e-12 / area)
+    fig_crystal_numbers_ax.scatter(times, crystal_numbers_per_px2 / space_scale**2 * 1e-12 * area)
     fig_crystal_numbers_ax.set_ylabel(f'Number of crystals per {area} $\mu$m$^2$')
     fig_crystal_numbers_ax.set_xlabel('Time [s]')
     fig_crystal_numbers.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
