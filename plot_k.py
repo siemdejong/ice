@@ -8,7 +8,7 @@ import os
 
 def extract_k(path):
     """Extract ice volume fraction information and fit results from csv file."""
-    df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'r3t_opt', 'r3t_err'])
+    df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'r_kd_opt', 'r_kd_err'])
 
     for csv_file_path in glob(os.path.join(path, '*[!test]', '*[!x].csv')):
         exp_df = pd.read_csv(csv_file_path, index_col='index').dropna()
@@ -17,8 +17,8 @@ def extract_k(path):
             'IBP_conc': int(exp_name[0][:-2]),
             'IBP': exp_name[1],
             'sucrose_conc': int(exp_name[2][:-1]),
-            'k_opt': float(exp_df['r3t_opt'].sample()),
-            'k_err': float(exp_df['r3t_err'].sample())
+            'k_opt': float(exp_df['r_kd_opt'].sample()),
+            'k_err': float(exp_df['r_kd_err'].sample())
         }
         df = df.append(data, ignore_index=True)
 
@@ -55,7 +55,7 @@ def plot_k(df, output_plot_dir):
 
     # Settings for the axes.
     for title, ax in zip(['WT', 'T18N'], axs):
-        ax.set_yscale('symlog', linthresh=1e-4) # around 0 a linear scale (because log(0)=-inf)
+        ax.set_yscale('symlog', linthresh=1e-3) # around 0 a linear scale (because log(0)=-inf)
         ax.set_title(title)
         # ax.set_yticks(np.arange(0, 1.1, .1))
         ax.set_xticks(np.arange(10, 40, 10))
