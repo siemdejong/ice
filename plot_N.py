@@ -18,7 +18,7 @@ def extract_N(path):
     """Extract number of crystals information and fit results from csv file."""
     dataframes = []
     for csv_file_path in glob(os.path.join(path, '*[!test]', '*[!x].csv')):
-        df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'times', 'r3', 'N0_opt', 'N0_err', 'N_t0_opt', 'N_t0_err', 'N_tau_opt', 'N_tau_opt', 'N_end_opt', 'N_end_err' 'ROI_area'])
+        df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'times', 'r3', 'N0_opt', 'N0_err', 'N_t0_opt', 'N_t0_err', 'N_tau_opt', 'N_tau_err', 'N_end_opt', 'N_end_err' 'ROI_area'])
 
         exp_df = pd.read_csv(csv_file_path, index_col='index').dropna()
         exp_name = os.path.splitext(os.path.basename(csv_file_path))[0].split('_')
@@ -45,7 +45,8 @@ def extract_N(path):
 def plot_N_per_A(dfs, output_plot_dir, A):
     """Plot the N per area A over time with different lines for different IBP concentration."""
 
-    def change_scale(value, A):
+    def change_scale(value, A=100):
+        """Change the N per area scale where A is the area in um"""
         return value / df['ROI_area'] / space_scale**2 / 1e12 * A
 
     # Initialize figure.
@@ -60,50 +61,51 @@ def plot_N_per_A(dfs, output_plot_dir, A):
             if df['IBP'].iloc[0] == 'X':
                 axs[0][0].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[0][0].plot(df['times'], linear_func(df['times'], df['N0_opt'], df['N0_opt']))
-                # axs[0][0].plot(df['times'], exp_decrease_func(df.times, df.N0_opt, df.N_t0_opt, df.N_tau_opt, df.N_end_opt))
+                # axs[0][0].plot(df.times, df['N_per_A'])
+                axs[0][0].plot(df.times, change_scale(exp_decrease_func(df.times, df.N0_opt, df.N_t0_opt, df.N_tau_opt, df.N_end_opt)))
                 axs[1][0].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[1][0].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                # axs[1][0].plot(df['times'], exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt']))
+                axs[1][0].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
             elif df['IBP'].iloc[0] == 'WT':
                 axs[0][0].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[0][0].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                # axs[0][0].plot(df['times'], exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt']))
+                axs[0][0].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
             elif df['IBP'].iloc[0] == 'T18N':
                 axs[1][0].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[1][0].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                # axs[1][0].plot(df['times'], exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt']))
+                axs[1][0].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
         elif df['sucrose_conc'].iloc[0] == 20:
             if df['IBP'].iloc[0] == 'X':
                 axs[0][1].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[0][1].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                # axs[0][1].plot(df['times'], exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt']))
+                axs[0][1].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
                 axs[1][1].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[1][1].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                # axs[1][1].plot(df['times'], exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt']))
+                axs[1][1].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
             elif df['IBP'].iloc[0] == 'WT':
                 axs[0][1].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[0][1].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                # axs[0][1].plot(df['times'], exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt']))
+                axs[0][1].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
             elif df['IBP'].iloc[0] == 'T18N':
                 axs[1][1].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[1][1].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                # axs[1][1].plot(df['times'], exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt']))
+                axs[1][1].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
         elif df['sucrose_conc'].iloc[0] == 30:
             if df['IBP'].iloc[0] == 'X':
                 axs[0][2].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[0][2].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                # axs[0][2].plot(df['times'], exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt']))
+                axs[0][2].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
                 axs[1][2].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[1][2].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                # axs[1][2].plot(df['times'], exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt']))
+                axs[1][2].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
             elif df['IBP'].iloc[0] == 'WT':
                 axs[0][2].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[0][2].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                # axs[0][2].plot(df['times'], exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt']))
+                axs[0][2].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
             elif df['IBP'].iloc[0] == 'T18N':
                 axs[1][2].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[1][2].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                # axs[1][2].plot(df['times'], exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt']))
+                axs[1][2].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
     
     # Order legend (https://stackoverflow.com/a/46160465/8797886)
     handles, labels = plt.gca().get_legend_handles_labels()
