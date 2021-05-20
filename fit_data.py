@@ -19,6 +19,9 @@ def jmak_func(t, a, t0, tau, m):
 def exp_decrease_func(t, N0, t0, tau, N_end):
     return (N0 - N_end) * np.exp(-(t - t0) / tau) + N_end
 
+def rm_func(t, r0, kd, m):
+    return (r0**m + kd * t)**(1 / m)
+
 def fitting(df, path):
     """Fit through the data."""
     # Ice volume fraction Q.
@@ -47,11 +50,24 @@ def fitting(df, path):
     print(f"Mean area = a*x + b, a={round(A_opt[0], 2)} +/- {round(A_err[0], 2)}, b={round(A_opt[1], 2)} +/- {round(A_err[1], 2)}.")
 
     # Mean radius of curvature <r>^3.
-    r3_opt, r3_cov = curve_fit(linear_func, df.times, df.r3)
-    r3_err = np.sqrt(np.diag(r3_cov))
-    df['r3t_opt'], df['r30_opt'] = r3_opt
-    df['r3t_err'], df['r30_err'] = r3_err
-    print(f"<r>^3 = a*x + b, a={round(r3_opt[0], 2)} +/- {round(r3_err[0], 2)}, b={round(r3_opt[1], 2)} +/- {round(r3_err[1], 2)}.")
+    # r3_opt, r3_cov = curve_fit(linear_func, df.times, df.r3)
+    # r3_err = np.sqrt(np.diag(r3_cov))
+    # df['r3t_opt'], df['r30_opt'] = r3_opt
+    # df['r3t_err'], df['r30_err'] = r3_err
+    # print(f"<r>^3 = a*x + b, a={round(r3_opt[0], 2)} +/- {round(r3_err[0], 2)}, b={round(r3_opt[1], 2)} +/- {round(r3_err[1], 2)}.")
+    r_opt, r_cov = curve_fit(rm_func, df.times, 2 * df.A / df.l, [0, 1, 2.5], bounds=([-np.inf, -np.inf, 1.5],[np.inf, np.inf, 3.5]), maxfev=100000)
+    r_err = np.sqrt(np.diag(r_cov))
+    df['r_r0_opt'] = r_opt[0]
+    df['r_r0_err'] = r_err[0]
+    df['r_kd_opt'] = r_opt[1]
+    df['r_kd_err'] = r_err[1]
+    df['r_m_opt'] = r_opt[2]
+    df['r_m_err'] = r_err[2]
+    print("r with m")
+    print(f"r0 = {round(r_opt[0], 3)} +/- {round(r_err[0], 3)}.")
+    print(f"kd = {round(r_opt[1], 3)} +/- {round(r_err[1], 3)}.")
+    print(f"m = {round(r_opt[2], 3)} +/- {round(r_err[2], 3)}.")
+    
 
     # Number of crystals N.
     # N_opt, N_cov = curve_fit(linear_func, df.times, df.N)
@@ -93,10 +109,15 @@ def plot(df, path, show=False):
     axs[0][1].plot(df.times, A_est, 'r', label="fit")
 
     # Mean radius of curvature <r>^3.
-    axs[1][0].set_title("<r>^3")
-    r3_est = linear_func(df.times, df.r3t_opt, df.r30_opt)
-    axs[1][0].scatter(df.times, df.r3, s=0.8, c='k', label="data")
-    axs[1][0].plot(df.times, r3_est, 'r', label="fit")
+    # axs[1][0].set_title("<r>^3")
+    # r3_est = linear_func(df.times, df.r3t_opt, df.r30_opt)
+    # axs[1][0].scatter(df.times, df.r3, s=0.8, c='k', label="data")
+    # axs[1][0].plot(df.times, r3_est, 'r', label="fit")
+    # Mean radius of curvature <r>^m.
+    axs[1][0].set_title(f"<r> (m={df.r_m_opt.iat[-1]})")
+    rm_est = rm_func(df.times, df.r_r0_opt, df.r_kd_opt, df.r_m_opt)
+    axs[1][0].scatter(df.times, (2 * df.A / df.l), s=0.8, c='k', label="data")
+    axs[1][0].plot(df.times, rm_est, 'r', label="fit")
 
     # Number of crystals N.
     axs[1][1].set_title("N")
