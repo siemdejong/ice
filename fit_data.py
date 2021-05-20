@@ -17,7 +17,7 @@ def jmak_func(t, a, t0, tau, m):
     return a * (1 - np.exp(-((t - 0) / tau)**m))
 
 def exp_decrease_func(t, N0, t0, tau, N_end):
-    return N0 * np.exp(-(t - t0) / tau) + N_end
+    return (N0 - N_end) * np.exp(-(t - t0) / tau) + N_end
 
 def fitting(df, path):
     """Fit through the data."""
