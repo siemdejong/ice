@@ -71,7 +71,7 @@ def fitting(df, path):
 
     # Number of crystals N.
     # N_opt, N_cov = curve_fit(linear_func, df.times, df.N)
-    N_opt, N_cov = curve_fit(exp_decrease_func, df.times, df.N, [60, 0, 100, 10], bounds=([0, -np.inf, -np.inf, 0], [100, np.inf, np.inf, 100]), maxfev = 100000)
+    N_opt, N_cov = curve_fit(exp_decrease_func, df.times, df.N, [60, 0, 100, 10], bounds=([0, -np.inf, 0, 0], [100, np.inf, np.inf, 100]), maxfev = 100000)
     N_err = np.sqrt(np.diag(N_cov))
     df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'] = N_opt
     df['N0_err'], df['N_t0_err'], df['N_tau_err'], df['N_end_err'] = N_err
@@ -151,6 +151,7 @@ if __name__ == '__main__':
         df.times = df.times * 13 / 21.52 # Correct for faster playback speed.
         df['time_corrected'] = True
 
+    # print(df.iloc[20])
     df = fitting(df, path)
     # print(df.Q_opt.sample(), df.tau_opt.sample(), df.m_opt.sample())
     plot(df, path, True)
