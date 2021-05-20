@@ -786,17 +786,18 @@ def circumference(frame_list):
 
 def A_distribution(frame_list):
     """Calculate the distribution of areas. Only use this function when you select A FEW frames for analysis."""
-    space_scale = 86.7*10**(-9) #m
-    fig, axs = plt.subplots(1, len(frame_list))
-    fig.suptitle('Area distribution')
+    if len(frame_list) < 10:
+        space_scale = 86.7*10**(-9) #m
+        fig, axs = plt.subplots(1, len(frame_list))
+        fig.suptitle('Area distribution')
 
-    for frame, ax in zip(frame_list, axs):
-        areas = np.array([crystal.area for crystal in frame.crystalobjects])
-        ax.hist(areas * space_scale**2 * 1e12, bins=20)
-        ax.set_xlabel('Area [um^2]')
-        ax.set_ylabel('frequency')
-        ax.set_title(f'frame {round(float(frame.file_name.split("s")[0]))}s')
-    plt.savefig(os.path.join(output_img_dir, 'A distributions.png'))
+        for frame, ax in zip(frame_list, axs):
+            areas = np.array([crystal.area for crystal in frame.crystalobjects])
+            ax.hist(areas * space_scale**2 * 1e12, bins=20)
+            ax.set_xlabel('Area [um^2]')
+            ax.set_ylabel('frequency')
+            ax.set_title(f'frame {round(float(frame.file_name.split("s")[0]))}s')
+        plt.savefig(os.path.join(output_img_dir, 'A distributions.png'))
 
 
 def export_quantities(times, Q, N, A, r, r3, l, ROI_area):
