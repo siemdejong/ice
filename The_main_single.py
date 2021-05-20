@@ -26,6 +26,7 @@ from glob import glob
 class FrameImg:
     ''' Add Description '''
     # ROI_crop = [xleft, ylow, dx, dy]
+    # ROI_crop = (382, 376, 489, 583)
     
     crop_boo = True
 
@@ -783,6 +784,20 @@ def circumference(frame_list):
 
     return mean_circumference_list
 
+def A_distribution(frame_list):
+    """Calculate the distribution of areas. Only use this function when you select A FEW frames for analysis."""
+    space_scale = 86.7*10**(-9) #m
+    fig, axs = plt.subplots(1, len(frame_list))
+    fig.suptitle('Area distribution')
+
+    for frame, ax in zip(frame_list, axs):
+        areas = np.array([crystal.area for crystal in frame.crystalobjects])
+        ax.hist(areas * space_scale**2 * 1e12, bins=20)
+        ax.set_xlabel('Area [um^2]')
+        ax.set_ylabel('frequency')
+        ax.set_title(f'frame {round(float(frame.file_name.split("s")[0]))}s')
+    plt.savefig(os.path.join(output_img_dir, 'A distributions.png'))
+
 
 def export_quantities(times, Q, N, A, r, r3, l, ROI_area):
     """Export the calculated quantities to csv."""
@@ -995,6 +1010,8 @@ if __name__ == "__main__":
 
     l = circumference(frame_list)
 
+    A_distribution(frame_list)
+
     ROI_area = frame_list[0].img_height * frame_list[0].img_width
     export_quantities(times, Q, N, A, r, r3, l, ROI_area)
 
@@ -1011,7 +1028,7 @@ if __name__ == "__main__":
 
         try:
             import plot_Q
-            print("Plotting Q's.")
+            print("Plotting Qs.")
             Q_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.pardir)
             df_Q = plot_Q.extract_Q(Q_path)
             plot_Q.plot_Q(df_Q, Q_path)
@@ -1020,25 +1037,27 @@ if __name__ == "__main__":
         
         try:
             import plot_A
-            print("Plotting A's.")
+            print("Plotting As.")
             A_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.pardir)
-            df_A = plot_A.extract_Q(A_path)
+            df_A = plot_A.extract_A(A_path)
             plot_A.plot_A(df_A, A_path)
         except FileNotFoundError:
             print("Cannot plot A's, because plot_A.py is missing.")
 
         try:
-            import plot_r3
+            # import plot_r3
+            import r3_alternative
             print("Plotting r^3.")
             r3_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.pardir)
-            df_r3 = plot_r3.extract_Q(r3_path)
-            plot_r3.plot_r3(df_A, r3_path)
+            df_r3 = r3_alternative.extract_r3(r3_path)
+            r3_alternative.plot_r3(df_r3, r3_path)
         except FileNotFoundError:
-            print("Cannot plot r^3, because plot_r3.py is missing.")
+            # print("Cannot plot r^3, because plot_r3.py is missing.")
+            print("Cannot plot r^3, because r3_alternative.py is missing.")
 
         try:
             import plot_k
-            print("Plotting r^3.")
+            print("Plotting kd.")
             k_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.pardir)
             df_k = plot_k.extract_k(k_path)
             plot_k.plot_k(df_k, k_path)
