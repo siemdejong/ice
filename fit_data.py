@@ -6,6 +6,7 @@ from tkinter import filedialog
 from tkinter import *
 import os
 import pandas as pd
+from glob import glob
 
 def linear_func(x, a, b):
     return a * x + b
@@ -19,7 +20,7 @@ def jmak_func(t, a, t0, tau, m):
 def exp_decrease_func(t, N0, t0, tau, N_end):
     return (N0 - N_end) * np.exp(-(t - t0) / tau) + N_end
 
-def rm_func(t, r0, kd, m):
+def rm_func(t, r0, kd, m): #TODO: implement t0
     return (r0**m + kd * t)**(1 / m)
 
 def fitting(df, path):
@@ -34,8 +35,8 @@ def fitting(df, path):
     df['Q_t0_err'] = Q_err[1]
     df['Q_tau_opt'] = Q_opt[2]
     df['Q_tau_err'] = Q_err[2]
-    df['Q_m_opt'] = Q_opt[2]
-    df['Q_m_err'] = Q_err[2]
+    df['Q_m_opt'] = Q_opt[3]
+    df['Q_m_err'] = Q_err[3]
     print(f"Q = {round(Q_opt[0], 3)} +/- {round(Q_err[0], 3)}.")
     print(f"t0 = {round(Q_opt[1], 3)} +/- {round(Q_err[1], 3)}.")
     print(f"tau = {round(Q_opt[2], 3)} +/- {round(Q_err[2], 3)}.")
@@ -55,7 +56,7 @@ def fitting(df, path):
     # df['r3t_opt'], df['r30_opt'] = r3_opt
     # df['r3t_err'], df['r30_err'] = r3_err
     # print(f"<r>^3 = a*x + b, a={round(r3_opt[0], 2)} +/- {round(r3_err[0], 2)}, b={round(r3_opt[1], 2)} +/- {round(r3_err[1], 2)}.")
-    r_opt, r_cov = curve_fit(rm_func, df.times, 2 * df.A / df.l, [0, 1, 2.5], bounds=([-np.inf, -np.inf, 1.5],[np.inf, np.inf, 3.5]), maxfev=100000)
+    r_opt, r_cov = curve_fit(rm_func, df.times, 2 * df.A / df.l, [0, 1, 2.5], bounds=([-np.inf, -np.inf, 1.5], [np.inf, np.inf, 3.5]), maxfev=100000)
     r_err = np.sqrt(np.diag(r_cov))
     df['r_r0_opt'] = r_opt[0]
     df['r_r0_err'] = r_err[0]
@@ -67,6 +68,18 @@ def fitting(df, path):
     print(f"r0 = {round(r_opt[0], 3)} +/- {round(r_err[0], 3)}.")
     print(f"kd = {round(r_opt[1], 3)} +/- {round(r_err[1], 3)}.")
     print(f"m = {round(r_opt[2], 3)} +/- {round(r_err[2], 3)}.")
+    # r3_opt, r3_cov = curve_fit(rm_func, df.times, (2 * df.A / df.l)**3, [0, 1, 2.5], bounds=([-np.inf, -np.inf, 1.5],[np.inf, np.inf, 3.5]), maxfev=100000)
+    # r3_err = np.sqrt(np.diag(r3_cov))
+    # df['r3_r0_opt'] = r3_opt[0]
+    # df['r3_r0_err'] = r3_err[0]
+    # df['r3_kd_opt'] = r3_opt[1]
+    # df['r3_kd_err'] = r3_err[1]
+    # df['r3_m_opt'] = r3_opt[2]
+    # df['r3_m_err'] = r3_err[2]
+    # print("r3 with m")
+    # print(f"r30 = {round(r3_opt[0], 3)} +/- {round(r3_err[0], 3)}.")
+    # print(f"kd = {round(r3_opt[1], 3)} +/- {round(r3_err[1], 3)}.")
+    # print(f"m = {round(r3_opt[2], 3)} +/- {round(r3_err[2], 3)}.")
     
 
     # Number of crystals N.
@@ -139,19 +152,19 @@ def plot(df, path, show=False):
         plt.show()
 
 if __name__ == '__main__':
-    root = Tk() # File dialog
-    path = filedialog.askopenfilename(title = "Select data file")
-    root.destroy()
-    # path = r'E:\Ice\analysis\0uM_X_10%_0\0uM_X_10%_0.csv'
+    # root = Tk() # File dialog
+    # path = filedialog.askopenfilename(title = "Select data file")
+    # root.destroy()
+    path = "E:\\Ice\\analysis\\"
+    for filename in glob(os.path.join(path, '*[!test]', '*[!x].csv')):
+        df = pd.read_csv(filename, index_col='index').dropna() # Drop rows which have at least one NaN.
+        try: # We only have to correct for the FPS difference once. If df.time_corrected is accessible, it is corrected.
+            df.time_corrected
+        except:
+            df.times = df.times * 13 / 21.52 # Correct for faster playback speed.
+            df['time_corrected'] = True
 
-    df = pd.read_csv(path, index_col='index').dropna() # Drop rows which have at least one NaN.
-    try: # We only have to correct for the FPS difference once. If df.time_corrected is accessible, it is corrected.
-        df.time_corrected
-    except:
-        df.times = df.times * 13 / 21.52 # Correct for faster playback speed.
-        df['time_corrected'] = True
-
-    # print(df.iloc[20])
-    df = fitting(df, path)
-    # print(df.Q_opt.sample(), df.tau_opt.sample(), df.m_opt.sample())
-    plot(df, path, True)
+        # print(df.iloc[20])
+        df = fitting(df, filename)
+        # print(df.Q_opt.sample(), df.tau_opt.sample(), df.m_opt.sample())
+        plot(df, filename, False)
