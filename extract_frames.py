@@ -42,16 +42,16 @@ def extractFrames(pathIn, pathOut):
  
 def main(INPUT_FOLDER_NAME, REL_OUTPUT_FOLDER_NAME=os.path.join(os.pardir, 'frames')):
     FRAMES_FOLDER = os.path.join(INPUT_FOLDER_NAME, REL_OUTPUT_FOLDER_NAME)
-    try:
-        os.mkdir(FRAMES_FOLDER)
-    except FileExistsError:
-        print(f"{FRAMES_FOLDER} already exists. Aborting.")
-        exit()
+    # try:
+    #     os.mkdir(FRAMES_FOLDER)
+    # except FileExistsError:
+    #     print(f"{FRAMES_FOLDER} already exists. Aborting.")
+    #     exit()
 
     files = [filename for filename in glob(os.path.join(INPUT_FOLDER_NAME, '*[!x].avi'))] # Find movies without the exclusion mark x at the end.
 
     for i, movie in enumerate(files):
-        print(f"Extracting frames from movie {i} of {len(files)}")
+        print(f"Extracting frames from movie {i+1} of {len(files)}")
         extractFrames(movie, os.path.join(FRAMES_FOLDER, os.path.splitext(os.path.basename(movie))[0]))
  
 if __name__=="__main__":
