@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from glob import glob
-from collections import namedtuple
 from tkinter import filedialog
 from tkinter import *
 import os
@@ -45,13 +44,13 @@ def plot_Q(df, output_plot_dir):
 
     # Plot the data.
     for data, ax in zip([df_X_0, df_X_0], axs):
-        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="0uM")
+        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="0uM", s=100)
     for data, ax in zip([df_WT_1, df_T18N_1], axs):
-        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="1uM")
+        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="1uM", s=100)
     for data, ax in zip([df_WT_4, df_T18N_4], axs):
-        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="4uM")
+        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="4uM", s=100)
     for data, ax in zip([df_WT_10, df_T18N_10], axs):
-        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="10uM")
+        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="10uM", s=100)
 
     # Settings for the axes.
     for title, ax in zip(['WT', 'T18N'], axs):
