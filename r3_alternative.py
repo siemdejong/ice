@@ -12,7 +12,7 @@ def extract_r3(path):
     """Extract ice volume fraction information and fit results from csv file."""
     dataframes = []
     for csv_file_path in glob(os.path.join(path, '*[!test]', '*[!x].csv')):
-        df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'times', 'A', 'l', 'r_r0_opt', 'r_kd_opt', 'r_m_opt'])
+        df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'times', 'A', 'l', 'r_r0_opt', 'r_kd_opt'])
 
         exp_df = pd.read_csv(csv_file_path, index_col='index').dropna()
         exp_name = os.path.splitext(os.path.basename(csv_file_path))[0].split('_')
@@ -23,7 +23,6 @@ def extract_r3(path):
         df['r3'] = (2 * df['A'] / df['l'])**3
         df['r_r0_opt'] = exp_df['r_r0_opt']
         df['r_kd_opt'] = exp_df['r_kd_opt']
-        df['r_m_opt'] = exp_df['r_m_opt']
         df['IBP_conc'] = int(exp_name[0][:-2])
         df['IBP'] = exp_name[1]
         df['sucrose_conc'] = int(exp_name[2][:-1])
@@ -43,7 +42,7 @@ def plot_r3(dfs, output_plot_dir):
     # Plot stored dataframes.
     for df in dfs:
         df['r3'] = df['r3'] * space_scale**3 * 1e18
-        df['r3_est'] = rm_func(df['times'], df['r_r0_opt'], df['r_kd_opt'], df['r_m_opt'])**3 * space_scale**3 * 1e18
+        df['r3_est'] = rm_func(df['times'], df['r_r0_opt'], df['r_kd_opt'])**3 * space_scale**3 * 1e18
         if df['sucrose_conc'].iloc[0] == 10:
             if df['IBP'].iloc[0] == 'X':
                 axs[0][0].scatter(df['times'], df['r3'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
