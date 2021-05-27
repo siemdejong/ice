@@ -11,7 +11,7 @@ def extract_r3(path):
     """Extract ice volume fraction information and fit results from csv file."""
     dataframes = []
     for csv_file_path in glob(os.path.join(path, '*[!test]', '*[!x].csv')):
-        df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'times', 'r3', 'k_opt', 'k_err', 'r30_opt', 'r30_err'])
+        df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'times', 'r3', 'r_kd_opt', 'r_kd_err', 'r30_opt', 'r30_err'])
 
         exp_df = pd.read_csv(csv_file_path, index_col='index').dropna()
         exp_name = os.path.splitext(os.path.basename(csv_file_path))[0].split('_')
@@ -103,6 +103,8 @@ def plot_r3(dfs, output_plot_dir):
     axs[0][0].set_xlabel("10% w/w sucrose")
     axs[0][1].set_xlabel("20% w/w sucrose")
     axs[0][2].set_xlabel("30% w/w sucrose")
+
+    axs[0][0].set_yscale('log')
 
     fig.savefig(os.path.join(output_plot_dir, 'r3 summary'), bbox_inches='tight')
     plt.show()
