@@ -45,17 +45,17 @@ def plot_k(df, output_plot_dir):
 
     # Plot the data.
     for data, ax in zip([df_X_0, df_X_0], axs):
-        ax.scatter(data['sucrose_conc'], data['k_opt'], label="0uM")
+        ax.scatter(data['sucrose_conc'], data['k_opt'], label="0uM", s=100)
     for data, ax in zip([df_WT_1, df_T18N_1], axs):
-        ax.scatter(data['sucrose_conc'], data['k_opt'], label="1uM")
+        ax.scatter(data['sucrose_conc'], data['k_opt'], label="1uM", s=100)
     for data, ax in zip([df_WT_4, df_T18N_4], axs):
-        ax.scatter(data['sucrose_conc'], data['k_opt'], label="4uM")
+        ax.scatter(data['sucrose_conc'], data['k_opt'], label="4uM", s=100)
     for data, ax in zip([df_WT_10, df_T18N_10], axs):
-        ax.scatter(data['sucrose_conc'], data['k_opt'], label="10uM")
+        ax.scatter(data['sucrose_conc'], data['k_opt'], label="10uM", s=100)
 
     # Settings for the axes.
     for title, ax in zip(['WT', 'T18N'], axs):
-        ax.set_yscale('symlog', linthresh=1e-3) # around 0 a linear scale (because log(0)=-inf)
+        ax.set_yscale('symlog', linthresh=1e-1) # around 0 a linear scale (because log(0)=-inf)
         ax.set_title(title)
         # ax.set_yticks(np.arange(0, 1.1, .1))
         ax.set_xticks(np.arange(10, 40, 10))
