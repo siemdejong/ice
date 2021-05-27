@@ -57,55 +57,56 @@ def plot_N_per_A(dfs, output_plot_dir, A):
     # Plot stored dataframes.
     for df in dfs:
         df['N_per_A'] = calculate_N_per_A(df, A)
+        df['N_per_A_est'] = change_scale(exp_decrease_func(df.times, df.N0_opt, df.N_tau_opt, df.N_end_opt))
         if df['sucrose_conc'].iloc[0] == 10:
             if df['IBP'].iloc[0] == 'X':
                 axs[0][0].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[0][0].plot(df['times'], linear_func(df['times'], df['N0_opt'], df['N0_opt']))
                 # axs[0][0].plot(df.times, df['N_per_A'])
-                axs[0][0].plot(df.times, change_scale(exp_decrease_func(df.times, df.N0_opt, df.N_t0_opt, df.N_tau_opt, df.N_end_opt)))
+                axs[0][0].plot(df.times, df['N_per_A_est'])
                 axs[1][0].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[1][0].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                axs[1][0].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
+                axs[1][0].plot(df['times'], df['N_per_A_est'])
             elif df['IBP'].iloc[0] == 'WT':
                 axs[0][0].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[0][0].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                axs[0][0].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
+                axs[0][0].plot(df['times'], df['N_per_A_est'])
             elif df['IBP'].iloc[0] == 'T18N':
                 axs[1][0].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[1][0].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                axs[1][0].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
+                axs[1][0].plot(df['times'], df['N_per_A_est'])
         elif df['sucrose_conc'].iloc[0] == 20:
             if df['IBP'].iloc[0] == 'X':
                 axs[0][1].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[0][1].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                axs[0][1].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
+                axs[0][1].plot(df['times'], df['N_per_A_est'])
                 axs[1][1].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[1][1].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                axs[1][1].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
+                axs[1][1].plot(df['times'], df['N_per_A_est'])
             elif df['IBP'].iloc[0] == 'WT':
                 axs[0][1].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[0][1].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                axs[0][1].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
+                axs[0][1].plot(df['times'], df['N_per_A_est'])
             elif df['IBP'].iloc[0] == 'T18N':
                 axs[1][1].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[1][1].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                axs[1][1].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
+                axs[1][1].plot(df['times'], df['N_per_A_est'])
         elif df['sucrose_conc'].iloc[0] == 30:
             if df['IBP'].iloc[0] == 'X':
                 axs[0][2].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[0][2].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                axs[0][2].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
+                axs[0][2].plot(df['times'], df['N_per_A_est'])
                 axs[1][2].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[1][2].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                axs[1][2].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
+                axs[1][2].plot(df['times'], df['N_per_A_est'])
             elif df['IBP'].iloc[0] == 'WT':
                 axs[0][2].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[0][2].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                axs[0][2].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
+                axs[0][2].plot(df['times'], df['N_per_A_est'])
             elif df['IBP'].iloc[0] == 'T18N':
                 axs[1][2].scatter(df['times'], df['N_per_A'], label=f"{df['IBP_conc'].iloc[0]} $\mu$M", s=0.5)
                 # axs[1][2].plot(df['times'], linear_func(df['times'], df['Nt_opt'], df['N0_opt']))
-                axs[1][2].plot(df['times'], change_scale(exp_decrease_func(df['times'], df['N0_opt'], df['N_t0_opt'], df['N_tau_opt'], df['N_end_opt'])))
+                axs[1][2].plot(df['times'], df['N_per_A_est'])
     
     # Order legend (https://stackoverflow.com/a/46160465/8797886)
     handles, labels = plt.gca().get_legend_handles_labels()
