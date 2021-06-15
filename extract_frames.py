@@ -1,3 +1,9 @@
+"""
+Adapted by Siem de Jong
+Adaptation makes it possible to extract frames for all files in a selected directory.
+Append x to the filename to mark for exclusion.
+"""
+
 import cv2
 import os
 from tkinter import filedialog

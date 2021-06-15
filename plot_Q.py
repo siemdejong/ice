@@ -1,10 +1,22 @@
+"""
+Siem de Jong
+Plot Q_inf for all selected sets. (summary plot)
+Append x to a file to mark for exclusion.
+Fitting had to be done using fit_data.py for this file to work.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from glob import glob
-from tkinter import filedialog
 from tkinter import *
 import os
+from tkinter import filedialog
+plt.style.use(['science', 'scatter'])
+plt.rcParams.update({
+    "font.family": "serif",   # specify font family here
+    "font.serif": ["Palatino Linotype"],  # specify font here
+    "font.size": 30})          # specify font size here
 
 def extract_Q(path):
     """Extract ice volume fraction information and fit results from csv file."""
@@ -26,9 +38,9 @@ def extract_Q(path):
 
 def plot_Q(df, output_plot_dir):
     """Plot the Q over time with different lines for different IBP concentration."""
-    fig = plt.figure()
-    gs = fig.add_gridspec(1, 2, hspace=0, wspace=0)
-    axs = gs.subplots(sharey=True)
+    fig = plt.figure(figsize=(10, 15))
+    gs = fig.add_gridspec(2, 1)
+    axs = gs.subplots()
 
     # Sort data on IBP concentration.
     df = df.sort_values('IBP_conc')
@@ -44,24 +56,27 @@ def plot_Q(df, output_plot_dir):
 
     # Plot the data.
     for data, ax in zip([df_X_0, df_X_0], axs):
-        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="0uM", s=100)
+        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="0uM", s=200, color='tab:blue', marker='o')
     for data, ax in zip([df_WT_1, df_T18N_1], axs):
-        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="1uM", s=100)
+        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="1uM", s=200, color='tab:green', marker='s')
     for data, ax in zip([df_WT_4, df_T18N_4], axs):
-        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="4uM", s=100)
+        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="4uM", s=200, color='tab:red', marker='^')
     for data, ax in zip([df_WT_10, df_T18N_10], axs):
-        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="10uM", s=100)
+        ax.scatter(data['sucrose_conc'], data['Q_opt'], label="10uM", s=200, color='tab:orange', marker='v')
 
     # Settings for the axes.
     for title, ax in zip(['WT', 'T18N'], axs):
-        ax.set_title(title)
-        ax.set_yticks(np.arange(0, 1.1, .1))
+        ax.set_title(title)#, fontsize=30)
+        ax.set_yticks(np.arange(0, 1.1, .2))
         ax.set_xticks(np.arange(10, 40, 10))
-        ax.set_xlabel(r"[C$_{12}$H$_{22}$O$_{11}$] [% w/w]")
-    axs[0].set_ylabel("Q")
-    axs[1].legend()
+        ax.set_xticklabels(np.around(np.arange(10, 40, 10),1))#, fontsize=20)
+        ax.set_yticklabels(np.around(np.arange(0, 1.1, .2),1))#, fontsize=20)
+    axs[1].set_xlabel(r"[Sucrose] [\% w/w]")#, fontsize=30)
+    axs[0].set_ylabel("Q")#, fontsize=30)
+    axs[1].set_ylabel("Q")#, fontsize=30)
+    axs[0].legend()#fontsize=20)
 
-    fig.savefig(os.path.join(output_plot_dir, 'volume fractions summary.png'), bbox_inches='tight')
+    fig.savefig(os.path.join(output_plot_dir, 'volume_fractions_summary.pdf'), bbox_inches='tight')
 
     plt.show()
 

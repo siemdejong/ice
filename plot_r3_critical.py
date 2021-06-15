@@ -1,3 +1,12 @@
+"""
+Siem de Jong
+Plot R critical for all selected sets.
+Append x to a file to mark for exclusion.
+Fitting had to be done using fit_data.py for this file to work.
+
+NOTE: essentially does the same as plot_r3.py. Possibly redundant.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -88,10 +97,13 @@ def plot_r3(dfs, output_plot_dir):
     handles, labels = plt.gca().get_legend_handles_labels()
     order = [0,2,3,1]
     axs[0][2].legend([handles[idx] for idx in order],[labels[idx] for idx in order])
+
+    for ax in axs.flat:
+        ax.set_ylim([1e-1, 1e3])
     
     # Place axis labels
-    axs[0][0].set_ylabel(r"$\log\langle r \rangle^3$ [$\mu$m$^3$]")
-    axs[1][0].set_ylabel(r"$\log\langle r \rangle^3$ [$\mu$m$^3$]")
+    axs[0][0].set_ylabel(r"$R_{cr}^3$ [$\mu$m$^3$]")
+    axs[1][0].set_ylabel(r"$R_{cr}^3$ [$\mu$m$^3$]")
 
     axs[1][0].set_xlabel("Time [s]")
     axs[1][1].set_xlabel("Time [s]")
@@ -109,7 +121,7 @@ def plot_r3(dfs, output_plot_dir):
     axs[0][1].set_xlabel("20% w/w sucrose")
     axs[0][2].set_xlabel("30% w/w sucrose")
 
-    fig.savefig(os.path.join(output_plot_dir, 'r3 A div l'), bbox_inches='tight')
+    fig.savefig(os.path.join(output_plot_dir, 'r3 crit'), bbox_inches='tight')
     plt.show()
 
 

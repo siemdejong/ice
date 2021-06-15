@@ -1,12 +1,9 @@
 """
 Siem de Jong
-Plot R critical for all selected sets.
+Plot <R> for all selected sets.
 Append x to a file to mark for exclusion.
 Fitting had to be done using fit_data.py for this file to work.
-
-NOTE: essentially does the same as plot_r3_critical.py. Possibly redundant.
 """
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -14,6 +11,7 @@ from glob import glob
 from tkinter import filedialog
 from tkinter import *
 import os
+from fit_data import linear_func
 from fit_data import rm_func
 
 plt.style.use(['science'])
@@ -26,16 +24,15 @@ def extract_r3(path):
     """Extract ice volume fraction information and fit results from csv file."""
     dataframes = []
     for csv_file_path in glob(os.path.join(path, '*[!test]', '*[!x].csv')):
-        df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'times', 'r_A_div_l', 'r_kd_opt', 'r_r0_opt'])
+        df = pd.DataFrame(columns=['sucrose_conc', 'IBP', 'IBP_conc', 'times', 'mean_r3_A_div_l', 'r_r0_A_div_l_opt', 'r_r0_A_div_l_err', 'r_kd_A_div_l_opt', 'r_kd_A_div_l_err'])
 
         exp_df = pd.read_csv(csv_file_path, index_col='index').dropna()
         exp_name = os.path.splitext(os.path.basename(csv_file_path))[0].split('_')
     
         df['times'] = exp_df['times']
-        df['r'] = exp_df['r_A_div_l']
-        df['r3'] = df['r']**3
-        df['r_kd_opt'] = exp_df['r_kd_opt']
-        df['r_r0_opt'] = exp_df['r_r0_opt']
+        df['r3'] = exp_df['mean_r3_A_div_l']
+        df['r_r0_opt'] = exp_df['r_r0_A_div_l_opt']
+        df['r_kd_opt'] = exp_df['r_kd_A_div_l_opt']
         df['IBP_conc'] = int(exp_name[0][:-2])
         df['IBP'] = exp_name[1]
         df['sucrose_conc'] = int(exp_name[2][:-1])
@@ -46,6 +43,7 @@ def extract_r3(path):
 
 def plot_r3(dfs, output_plot_dir):
     """Plot the Q over time with different lines for different IBP concentration."""
+
     # Initialize figure.
     fig = plt.figure(figsize=(15, 20))
     gs = fig.add_gridspec(3, 2)
@@ -57,9 +55,9 @@ def plot_r3(dfs, output_plot_dir):
         df['r3_est'] = rm_func(df['times'], df['r_r0_opt'], df['r_kd_opt'])**3 * space_scale**3 * 1e18
         if df['sucrose_conc'].iloc[0] == 10:
             if df['IBP'].iloc[0] == 'X':
-                axs[0][0].scatter(df['times'], df['r3'], label=r"0 $\mu$M", s=15, marker='o')
+                axs[0][0].scatter(df['times'], df['r3'], label=r"0 \textmu M", s=15, marker='o')
                 axs[0][0].plot(df['times'], df['r3_est'])
-                axs[0][1].scatter(df['times'], df['r3'], label=r"0 $\mu$M", s=15, marker='o')
+                axs[0][1].scatter(df['times'], df['r3'], label=r"0 \textmu M", s=15, marker='o')
                 axs[0][1].plot(df['times'], df['r3_est'])
             elif df['IBP'].iloc[0] == 'WT':
                 if df['IBP_conc'].iloc[0] == 1:
@@ -137,9 +135,9 @@ def plot_r3(dfs, output_plot_dir):
         ax.set_ylim([1e-2, 1e3])
     
     # Place axis labels
-    axs[0][0].set_ylabel(r"$R_{\mathrm{cr}}^3$ [\textmu m$^3$]")
-    axs[1][0].set_ylabel(r"$R_{\mathrm{cr}}^3$ [\textmu m$^3$]")
-    axs[2][0].set_ylabel(r"$R_{\mathrm{cr}}^3$ [\textmu m$^3$]")
+    axs[0][0].set_ylabel(r"$\langle R\rangle^3$ [\textmu m$^3$]")
+    axs[1][0].set_ylabel(r"$\langle R\rangle^3$ [\textmu m$^3$]")
+    axs[2][0].set_ylabel(r"$\langle R\rangle^3$ [\textmu m$^3$]")
 
     axs[2][0].set_xlabel("Time [s]")
     axs[2][1].set_xlabel("Time [s]")
@@ -156,8 +154,8 @@ def plot_r3(dfs, output_plot_dir):
     axs[0][0].set_xlabel("WT")
     axs[0][1].set_xlabel("T18N")
 
-    # fig.savefig(os.path.join(output_plot_dir, 'r3 A div l'), bbox_inches='tight')
-    fig.savefig(os.path.join(output_plot_dir, 'Rcr-time.pdf'), bbox_inches='tight')
+    # fig.savefig(os.path.join(output_plot_dir, ''), bbox_inches='tight')
+    fig.savefig(os.path.join(output_plot_dir, 'R average-time.pdf'), bbox_inches='tight')
     plt.show()
 
 

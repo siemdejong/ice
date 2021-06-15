@@ -1,3 +1,12 @@
+"""
+Adapted by Siem de Jong
+Adapted from earlier versions (previously The_main_single.py) to calculate
+the ice volume fraction (Q), mean area (A), mean radius of curvature (r_k),
+mean radius of curvature cubed (r_k3), circumference (l), area (A) and mean crystal radius (2A/l).
+It is possible to plot the radius and area distribution for a few frames.
+Running the file will prompt the user to select a frame directory and selecting an ROI.
+"""
+
 import cv2
 import numpy as np
 import pandas as pd
@@ -5,20 +14,9 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import time
 import os
-from scipy import stats
-import trackpy as tp
-# import pims
-import skimage.io as io
-from math import sqrt
-from pprint import pprint
-import itertools
 import sys
-import pickle
-import math
-import json
 from tkinter import filedialog
 from tkinter import *
-import csv
 import platform
 import subprocess
 from glob import glob
@@ -26,7 +24,7 @@ from glob import glob
 class FrameImg:
     ''' Add Description '''
     # ROI_crop = [xleft, ylow, dx, dy]
-    # ROI_crop = (382, 376, 489, 583)
+    ROI_crop = (254, 366, 625, 642)
     
     crop_boo = True
 
@@ -403,115 +401,21 @@ class CrystalObject:
         self.s_contours_df_child = df
 
 
-class CrystalRecog:
-    def __init__(self, c_obj):
-        """ Start off by creating the empty lists (which will be appended with the attributes
-        for the specific crystal for each FrameImg. Then, add the attributes for the First 
-        Frame to start off with. """
-        self.s_contours_dfs = []
-        self.raw_contours = []
-        self.s_contours = []
-        self.lengths = []
-        self.areas = []
-        self.center_arrays = []
-        self.mean_curvatures = []
-        self.c_count = 0
-        self.frames_used = []
-        self.parent_bool = []
-        self.child_contours_raw = []
-        self.x_center = c_obj.x_center
-        self.y_center = c_obj.y_center
-        self.hierarchy = c_obj.hierarchy
-        self.count_num = c_obj.contour_num
-        self.add_crystalobject(c_obj)
-        
-    def add_crystalobject(self, c_obj):
-        """ Add cryal attributes to the respective class intances. """
-        self.s_contours_dfs.append(c_obj.s_contours_df)
-        self.raw_contours.append(c_obj.contour_raw)
-        self.s_contours.append(c_obj.s_contours)
-        self.lengths.append(c_obj.length)
-
-        self.areas.append(c_obj.area)
-        self.center_arrays.append(c_obj.center_arr)
-        self.child_contours_raw.append(c_obj.child_contour_raw)
-        self.parent_bool.append(c_obj.parent_bool)
-        self.mean_curvatures.append(c_obj.s_contours_df['mean(curvature)'].min())
-        self.frames_used.append(str(c_obj.frame_num))
-        self.c_count += 1
-
-    def retreive_outer_bounds(self, padding_margin):
-        max_y = self.s_contours_dfs[len(self.s_contours_dfs)-1].y.max()
-        min_y = self.s_contours_dfs[len(self.s_contours_dfs)-1].y.min()
-        y_padding = (max_y - min_y)*padding_margin
-        max_y += y_padding
-        min_y -= min_y - y_padding
-        max_x = self.s_contours_dfs[len(self.s_contours_dfs)-1].x.max()
-        min_x = self.s_contours_dfs[len(self.s_contours_dfs)-1].x.min()
-        x_padding = (max_x - min_x)*padding_margin
-        max_x += x_padding
-        min_x -= x_padding
-        return min_y, max_y, min_x, max_x
-
-    def plot_contours_across_frames(self, file_count, output_img_dir):
-        """ Add description """
-        fig = plt.figure()
-        fig.tight_layout()
-        gs1 = fig.add_gridspec(nrows=3, ncols=2)
-        fig.suptitle(t=f'#{self.count_num}; FU{self.c_count}/{file_count}', fontsize=12, va='top')
-        fig_ax1 = fig.add_subplot(gs1[:-1, :])
-        fig_ax1.title.set_text('Contours')
-        fig_ax1.title.set_fontsize(12)
-        for contour in self.s_contours:
-            fig_ax1.scatter(contour[...,0], contour[...,1])
-        fig_ax1.invert_yaxis()
-
-        fig_ax2 = fig.add_subplot(gs1[-1, :-1])
-        fig_ax2.title.set_text('Area')
-        fig_ax2.plot(self.areas)
-        fig_ax2.title.set_fontsize(10)
-
-        fig_ax3 = fig.add_subplot(gs1[-1, -1])
-        fig_ax3.title.set_text('Mean Curvature')
-        fig_ax3.plot(self.mean_curvatures)
-        fig_ax3.title.set_fontsize(10)
-
-        frames_used = ','.join(self.frames_used)
-        fig.text(0.02, 0.02, 'FU: ' + frames_used, color='grey',fontsize=4)
-        fig.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
-            wspace=0.3, hspace=0.5)
-        fig.savefig(os.path.join(output_img_dir, f'newtest_img{self.count_num}.png'))
-        plt.close()
-
-# def closest(cur_pos, positions):
-#     """Get the euclidian distance to the closest point to current coordinate
-#         and store the closest point and its distance"""
-#     dist = spatial.distance.cdist([tuple(cur_pos)], positions)
-#     min_dist = dist.min()
-#     min_index = dist.tolist()[0].index(min_dist)
-#     closest_pos = positions[min_index]
-#     return closest_pos, min_index, min_dist
-
-# def EUCL_distance(p1, p2):
-#     """Calculate the distance between two points"""
-#     a = np.array(p1)
-#     b = np.array(p2)
-#     return np.linalg.norm(a-b)
-
-
 def get_img_files_ordered(dir_i):
     """ Function returns a list of all input frames, ordered by their frame number, 
     together with a count of the total number of frames.  """
     img_files = []
-    for filename in [os.path.basename(filename) for filename in glob(os.path.join(dir_i, '*[!x].png'))]: # Allow for exclusion (x) of images (masking is a better solution)
+    for filename in [os.path.basename(filename) for filename in glob(os.path.join(dir_i, '*[!x].png'))]: # Allow for exclusion (x) of images (masking is a better solution).
     # for filename in os.listdir(dir_i)
         try:
             file_i = {
             'filename' : filename,
             # 'file_num' : int(file.split('frame')[1].split('.')[0])
-            'file_num': int(filename.split('.')[0]) # The data acquired by Siem after using extract_frames.py by Agata uses another file naming scheme. (<time>s.png instead of frame<frame>.png)
+            # The data acquired by Siem after using extract_frames.py by Agata uses another file naming scheme.
+            # (<time>s.png instead of frame<frame>.png)
+            'file_num': int(filename.split('.')[0]) 
             }
-            img_files.append(file_i )
+            img_files.append(file_i)
         except IndexError:
             pass
     ordered_img_files = sorted(img_files, key=lambda k: k['file_num'])
@@ -567,6 +471,7 @@ def common_COM(p1, a1, p2, a2):
     return x_common, y_common
 
 def open_file(path):
+    """Because I don't want to look for the right directory. Just gimme da folder pls."""
     if platform.system() == "Windows":
         os.startfile(path)
     elif platform.system() == "Darwin":
@@ -574,27 +479,24 @@ def open_file(path):
     else:
         subprocess.Popen(["xdg-open", path])
 
+# Below, functions come in groups of two/three:
+#   Making a list - (Calculating) - Plotting
 def plot_ivf(ice_volume_fraction_list, times):
-    # Plot the volume fraction in time.
+    """Plot the volume fraction in time."""
     fig_volume_fraction = plt.figure()
     fig_volume_fraction.tight_layout()
     gs_vol_frac = fig_volume_fraction.add_gridspec(nrows=1, ncols=1)
     fig_volume_fraction_ax = fig_volume_fraction.add_subplot(gs_vol_frac[0, 0])
-    # fig_volume_fraction_ax.title.set_text(frame_list[0].imgs_dir)
     fig_volume_fraction_ax.scatter(times, ice_volume_fraction_list)
     fig_volume_fraction_ax.set_ylabel('Ice volume fraction')
     fig_volume_fraction_ax.set_xlabel('Time [s]')
-    # fig_volume_fraction_ax.set_xticks(np.linspace(round(times[0]), round(times[-1]),num=2)) # Set this for appropriate axis ticks.
     fig_volume_fraction.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
                 wspace=0.3, hspace=0.5)
     fig_volume_fraction.savefig(os.path.join(output_img_dir, 'volume_fraction.png'), bbox_inches='tight')
     plt.close()
 
 def calculate_volume_fraction(frame_list):
-    """
-    Calculate the volume fraction Q = v_ice / (v_ice + v_liq) of the ROI.
-    Dumps volume fractions per time to a json file, for later reuse so not everything has to be calculated again.
-    """
+    """Calculate the volume fraction Q = v_ice / (v_ice + v_liq) of the ROI."""
     print("Calculating volume fractions.")
     ice_volume_fraction_list = []
     times = []
@@ -609,14 +511,14 @@ def calculate_volume_fraction(frame_list):
     
     plot_ivf(ice_volume_fraction_list, times)
 
-    return times, ice_volume_fraction_list
+    return times, ice_volume_fraction_list # Also return times for use on other analysis.
 
+# --------------------------
 
 def plot_crystal_numbers_per_ROIarea(crystal_numbers_per_px2, times, area=100):
     """Plot the amount of crystals per area in time.
     area: the area in square micrometers in which you will find the amount of crystals
     """
-    space_scale = 86.7*10**(-9) #m
     fig_crystal_numbers = plt.figure()
     fig_crystal_numbers.tight_layout()
     gs_vol_frac = fig_crystal_numbers.add_gridspec(nrows=1, ncols=1)
@@ -649,15 +551,14 @@ def amount_of_crystals_per_ROIarea(frame_list):
 
     return crystal_numbers
 
+# --------------------------
+
 def plot_avg_crystal_area(avg_crystal_areas, times):
     """Plot the amount of crystals in time."""
-    space_scale = 86.7*10**(-9) #m
-
     fig_avg_crystal_areas = plt.figure()
     fig_avg_crystal_areas.tight_layout()
     gs_vol_frac = fig_avg_crystal_areas.add_gridspec(nrows=1, ncols=1)
     fig_avg_crystal_areas_ax = fig_avg_crystal_areas.add_subplot(gs_vol_frac[0, 0])
-    # fig_volume_fraction_ax.title.set_text(frame_list[0].imgs_dir)
     fig_avg_crystal_areas_ax.scatter(times, np.asarray(avg_crystal_areas)*space_scale**2*1e12)
     fig_avg_crystal_areas_ax.set_ylabel(r'Mean crystal area [$\mu$m$^2$]')
     fig_avg_crystal_areas_ax.set_xlabel('Time [s]')
@@ -683,10 +584,10 @@ def avg_crystal_area(frame_list):
 
     return avg_area_list
 
-def plot_mean_radius(mean_radius_list, times):
-    """Plot the amount of crystals in time."""
-    space_scale = 86.7*10**(-9) #m
+# --------------------------
 
+def plot_mean_radius_of_curvature(mean_radius_list, times):
+    """Plot the amount of crystals in time."""
     fig_mean_radius = plt.figure()
     fig_mean_radius.tight_layout()
     gs_mean_radius = fig_mean_radius.add_gridspec(nrows=1, ncols=1)
@@ -700,27 +601,65 @@ def plot_mean_radius(mean_radius_list, times):
     fig_mean_radius.savefig(os.path.join(output_img_dir, 'mean_radius.png'), bbox_inches='tight')
     plt.close()
 
-def calculate_mean_radius(frame):
+
+def calculate_mean_radius_of_curvature(frame):
     """Calculate the mean radius from the mean curvature by taking its reciprocal."""
     mean_curv = np.mean([crystal.mean_curvature for crystal in frame.crystalobjects])
     mean_radius = 1 / mean_curv
     return mean_radius
 
-def mean_radius(frame_list):
-    """Plot the mean radius of the crystals in the ROI."""
+
+def mean_radius_of_curvature(frame_list):
+    """Plot the mean radius of curvature of the crystals in the ROI."""
     print("Calculating mean radius of curvature per time")
 
-    mean_radius_list = list(map(calculate_mean_radius, frame_list))
+    mean_radius_list = list(map(calculate_mean_radius_of_curvature, frame_list))
     times = [float(frame.file_name.split('s')[0]) for frame in frame_list]
     
-    plot_mean_radius(mean_radius_list, times)
+    plot_mean_radius_of_curvature(mean_radius_list, times)
 
     return mean_radius_list
 
-def plot_mean_radius3(mean_radius3_list, times):
-    """Plot the amount of crystals in time."""
-    space_scale = 86.7*10**(-9) #m
+# --------------------------
 
+def plot_median_mean_radius(mean_radius_list, times):
+    """Plot the amount of crystals in time."""
+    fig_mean_radius = plt.figure()
+    fig_mean_radius.tight_layout()
+    gs_mean_radius = fig_mean_radius.add_gridspec(nrows=1, ncols=1)
+    fig_mean_radius_ax = fig_mean_radius.add_subplot(gs_mean_radius[0, 0])
+    # fig_volume_fraction_ax.title.set_text(frame_list[0].imgs_dir)
+    fig_mean_radius_ax.scatter(times, np.asarray(mean_radius_list)*space_scale*1e6)
+    fig_mean_radius_ax.set_ylabel(r'median of mean crystal radius [$\mu$m]')
+    fig_mean_radius_ax.set_xlabel('Time [s]')
+    fig_mean_radius.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
+                wspace=0.3, hspace=0.5)
+    fig_mean_radius.savefig(os.path.join(output_img_dir, 'median_mean_radius.png'), bbox_inches='tight')
+    plt.close()
+
+
+def calculate_median_mean_radius(frame):
+    """Calculate the mean radius from the mean curvature by taking its reciprocal."""
+    mean_curv = np.median([crystal.mean_curvature for crystal in frame.crystalobjects])
+    mean_radius = 1 / mean_curv
+    return mean_radius
+
+
+def median_mean_radius(frame_list):
+    """Plot the mean radius of the crystals in the ROI."""
+    print("Calculating mean radius of curvature per time")
+
+    median_mean_radius_list = list(map(calculate_median_mean_radius, frame_list))
+    times = [float(frame.file_name.split('s')[0]) for frame in frame_list]
+    
+    plot_median_mean_radius(median_mean_radius_list, times)
+
+    return median_mean_radius_list
+
+# --------------------------
+
+def plot_mean_radius_of_curvature3(mean_radius3_list, times):
+    """Plot the amount of crystals in time."""
     fig_mean_radius3 = plt.figure()
     fig_mean_radius3.tight_layout()
     gs_mean_radius3 = fig_mean_radius3.add_gridspec(nrows=1, ncols=1)
@@ -734,22 +673,24 @@ def plot_mean_radius3(mean_radius3_list, times):
     fig_mean_radius3.savefig(os.path.join(output_img_dir, 'mean_radius3.png'), bbox_inches='tight')
     plt.close()
 
-def calculate_mean_radius3(frame):
+def calculate_mean_radius_of_curvature3(frame):
     """Calculate the mean radius cubed from the mean curvature by taking its reciprocal and cubing the outcome."""
     mean_curv = np.mean([crystal.mean_curvature for crystal in frame.crystalobjects])
     mean_radius = 1 / mean_curv
     return mean_radius**3
 
-def mean_radius3(frame_list):
+def mean_radius_of_curvature3(frame_list):
     """Plot the mean radius cubed of the crystals in the ROI."""
     print("Calculating mean radius cubed per time")
 
-    mean_radius3_list = list(map(calculate_mean_radius3, frame_list))
+    mean_radius3_list = list(map(calculate_mean_radius_of_curvature3, frame_list))
     times = [float(frame.file_name.split('s')[0]) for frame in frame_list]
     
-    plot_mean_radius3(mean_radius3_list, times)
+    plot_mean_radius_of_curvature3(mean_radius3_list, times)
 
     return mean_radius3_list
+
+# --------------------------
 
 def circumference(frame_list):
     """Plot the mean circumference of the crystals in the ROI."""
@@ -784,10 +725,75 @@ def circumference(frame_list):
 
     return mean_circumference_list
 
-def A_distribution(frame_list):
-    """Calculate the distribution of areas. Only use this function when you select A FEW frames for analysis."""
+# --------------------------
+
+def plot_mean_radius3_A_div_l(mean_radius3_list, times):
+    """Plot the amount of crystals in time."""
+    fig_mean_radius3_Al = plt.figure()
+    fig_mean_radius3_Al.tight_layout()
+    gs_mean_radius3_Al = fig_mean_radius3_Al.add_gridspec(nrows=1, ncols=1)
+    fig_mean_radius3_Al_ax = fig_mean_radius3_Al.add_subplot(gs_mean_radius3_Al[0, 0])
+    # fig_volume_fraction_ax.title.set_text(frame_list[0].imgs_dir)
+    fig_mean_radius3_Al_ax.scatter(times, np.asarray(mean_radius3_list)*space_scale**3*1e18)
+    fig_mean_radius3_Al_ax.set_ylabel(r'$\langle R \rangle^3$ [$\mu$m$^3$]')
+    fig_mean_radius3_Al_ax.set_xlabel('Time [s]')
+    fig_mean_radius3_Al.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
+                wspace=0.3, hspace=0.5)
+    fig_mean_radius3_Al.savefig(os.path.join(output_img_dir, 'mean_radius3_a_div_l.png'), bbox_inches='tight')
+    plt.close()
+
+def calculate_mean_radius3_A_div_l(frame):
+    mean_radius = np.mean([2 * crystal.area / crystal.length for crystal in frame.crystalobjects])
+    return mean_radius**3
+
+def r3_by_A_div_l(frame_list, plot=True):
+    """Compute <r>^3 by doing <2*A/l>^3"""
+    print("Calculating mean r cubed by doing A / l per time.")
+    mean_radius3_list = list(map(calculate_mean_radius3_A_div_l, frame_list))
+    times = [float(frame.file_name.split('s')[0]) for frame in frame_list]
+
+    if plot:
+        plot_mean_radius3_A_div_l(mean_radius3_list, times)
+
+    return mean_radius3_list
+
+# --------------------------
+# Below, two functions are posed to show the distribution of radii and areas.
+
+def r_distribution(frame_list):
+    """Calculate the distribution of radii. Only use this function when you select A FEW frames for analysis."""
+    # Only plot area distributions if 10 frames are selected.
     if len(frame_list) < 10:
-        space_scale = 86.7*10**(-9) #m
+        fig, axs = plt.subplots(1, 2)
+
+        for frame in frame_list:
+            rk = 1 / np.array([crystal.mean_curvature for crystal in frame.crystalobjects]) * space_scale * 1e6
+            r = np.array([2 * crystal.area / crystal.length for crystal in frame.crystalobjects]) * space_scale * 1e6
+            mean_area = np.mean([crystal.area for crystal in frame.crystalobjects])
+            mean_circ = np.mean([crystal.length for crystal in frame.crystalobjects])
+            axs[0].hist(rk, bins=20)
+            axs[1].hist(r, bins=20)
+            axs[0].vlines(np.nanmean(rk), 0, 20, color='red', label='mean') # Use nanmean, because some rk are apparantly still nans...
+            axs[0].vlines(np.nanmedian(rk), 0, 20, color='blue', label='median')
+            axs[1].vlines(np.nanmean(r), 0, 20, color='red', label='R')
+            axs[1].vlines(2 * mean_area / mean_circ * space_scale * 1e6, 0, 20, color='orange', label='Rcr')
+            axs[0].set_xlabel('Radius of curvature [um]')
+            axs[1].set_xlabel('Radius [um]')
+            for ax in axs:
+                ax.set_ylabel('frequency')
+                ax.set_title(f'frame {round(float(frame.file_name.split("s")[0]))}s')
+                ax.set_xlim([0, np.max([rk, r])])
+                ax.set_ylim([0, 5])
+                ax.legend()
+        plt.savefig(os.path.join(output_img_dir, 'R distributions.png'))
+        plt.show()
+
+def A_distribution(frame_list):
+    """Calculate the distribution of areas. Only use this function when you select A FEW frames for analysis,
+    because it will plot distribution of max 10 frames.
+    """
+    # Only plot area distributions if 10 frames are selected.
+    if len(frame_list) < 10:
         fig, axs = plt.subplots(1, len(frame_list))
         fig.suptitle('Area distribution')
 
@@ -797,20 +803,24 @@ def A_distribution(frame_list):
             ax.set_xlabel('Area [um^2]')
             ax.set_ylabel('frequency')
             ax.set_title(f'frame {round(float(frame.file_name.split("s")[0]))}s')
+
         plt.savefig(os.path.join(output_img_dir, 'A distributions.png'))
 
+# --------------------------
 
-def export_quantities(times, Q, N, A, r, r3, l, ROI_area):
+def export_quantities(times, Q, N, A, r_k, r_k3, mean_r3_A_div_l, l, ROI_area, mr_k):
     """Export the calculated quantities to csv."""
     data = {
         'times': times,
         'Q': Q,
         'N': N,
         'A': A,
-        'r': r,
-        'r3': r3,
+        'r_k': r_k,
+        'r_k3': r_k3,
+        'mean_r3_A_div_l': mean_r3_A_div_l,
         'l': l,
-        'ROI_area': ROI_area
+        'ROI_area': ROI_area,
+        'mr_k': mr_k
     }
     df = pd.DataFrame(data)
     df.to_csv(os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.path.basename(IMAGE_OUTPUT_FOLDER_NAME) + '.csv'), index_label='index')
@@ -818,12 +828,17 @@ def export_quantities(times, Q, N, A, r, r3, l, ROI_area):
 
 if __name__ == "__main__":
     start_time = time.time()
-    # Constants:
+
+    # Use this variable to convert pixels to meters.
+    space_scale = 86.7*10**(-9) #m
+
+    # Frame directory selection.
     IMAGE_FORMAT = '.png'
     root = Tk() # File dialog
     INPUT_FOLDER_NAME =  filedialog.askdirectory(title = "Select directory")
     root.destroy()
 
+    # Directory creation.
     try:
         os.mkdir(os.path.join(INPUT_FOLDER_NAME, os.path.join(os.pardir, os.pardir, 'analysis')))
         os.mkdir(os.path.join(INPUT_FOLDER_NAME, os.path.join(os.pardir, os.pardir, 'csv')))
@@ -832,197 +847,69 @@ if __name__ == "__main__":
     IMAGE_OUTPUT_FOLDER_NAME = os.path.join(INPUT_FOLDER_NAME, os.path.join(os.pardir, os.pardir, 'analysis', os.path.basename(INPUT_FOLDER_NAME)))
     CSV_EXPORT_FOLDER = os.path.join(INPUT_FOLDER_NAME, os.path.join(os.pardir, os.pardir, 'csv', os.path.basename(INPUT_FOLDER_NAME)))
 
-    # Thresholding
-    # 599 and 0 are 'okay' for 0uM 10% for example
-    threshold_blocksize = int(input('Threshold blocksize: '))
-    threshold_constant = int(input('Threshold subtraction constant: '))
-
-    MAX_CENTER_DISTANCE = 0
-    AREA_PCT = 0
-    CENTER_PCT = 0
-    MIN_PLOT_FRAMES = math.inf
-    PLOT_FRAME_CONTOURS = True
-
     imgs_dir = set_and_check_folder(INPUT_FOLDER_NAME)
     output_img_dir = set_and_check_folder(IMAGE_OUTPUT_FOLDER_NAME, True)
     csv_export_dir = set_and_check_folder(CSV_EXPORT_FOLDER, True)
     img_files, file_count = get_img_files_ordered(imgs_dir)
     open_file(IMAGE_OUTPUT_FOLDER_NAME)
 
-    # Write settings to file.
+    # Thresholding
+    # 599 and 0 are 'okay' for 0uM 10% for example.
+    # See thesis S. de Jong for possible good values for different sucrose and IBP concentrations.
+    threshold_blocksize = int(input('Threshold blocksize: '))
+    threshold_constant = int(input('Threshold subtraction constant: '))
+
+    # If the contours should be plotted on the frames, select True.
+    PLOT_FRAME_CONTOURS = True
+
+    # Write thresholding settings to file.
     with open(os.path.join(IMAGE_OUTPUT_FOLDER_NAME, 'settings.txt'), 'w') as settings_file:
         settings_file.write('Adaptive thresholding\n')
         settings_file.write(f'\tblockSize = {threshold_blocksize}\n')
         settings_file.write(f'\tconstant = {threshold_constant}\n\n')
 
+    # Create frame list with contours.
     frame_list = create_frame_list(img_files, file_count, imgs_dir,
         output_img_dir, IMAGE_FORMAT, PLOT_FRAME_CONTOURS)
     
+    # Write ROI settings to file settings file.
     with open(os.path.join(IMAGE_OUTPUT_FOLDER_NAME, 'settings.txt'), 'a') as settings_file:
         settings_file.write(f'ROI crop = {FrameImg.ROI_crop}')
 
-    img_processing_time = time.time() - start_time # Log time it took to process images.
+    # Log time it took to process images.
+    img_processing_time = time.time() - start_time 
     
-    # # Create initial crystals
-    # crystal_tracking_list = []
-    # for obj in frame_list[0].crystalobjects:
-    #     crystal_tracking_list.append(CrystalRecog(obj))
-    # print('Frame # 1:')
-    # print(f'Used count: {len(crystal_tracking_list)}')
+    # Extract data from the frame list.
+    times, Q = calculate_volume_fraction(frame_list) # Timestamps and ice volume fractions per frame.
+    N = amount_of_crystals_per_ROIarea(frame_list) # Number of crystals per frame.
+    A = avg_crystal_area(frame_list) # Total area per frame.
+    mr_k = median_mean_radius(frame_list) # Median of the mean radius of curvature.
+    r_k = mean_radius_of_curvature(frame_list) # Mean radius of curvature.
+    r_k3 = mean_radius_of_curvature3(frame_list) # Mean radius cubed of curvature.
+    l = circumference(frame_list) # The circumferences.
+    mean_r3_A_div_l = r3_by_A_div_l(frame_list) # Mean radius.
 
-    # # Start from 1 here, because frame 0 / the first frame already done above
-    # for i in range(1,len(frame_list)):
-    #     print(f'Frame # {i+1}:', end='\r')
-    #     c_central_list = frame_list[i].crystal_centers
-    #     c_crystal_areas_list = frame_list[i].crystal_areas
-    #     pre_frame_center_coord_count = len(c_central_list)
-    #     for target_crys in crystal_tracking_list:
-    #         # find the coordinates, index of said coordinates, and distance to last center point
-    #         clostest_coord, index_closest, distance = closest(target_crys.center_arrays[len(target_crys.center_arrays) -1], c_central_list)
-    #         if distance < MAX_CENTER_DISTANCE:
-    #             # Find Crystal object corresponding to the central coord
-    #             for crys in frame_list[i].crystalobjects:
-    #                 if (crys.center_arr == clostest_coord).all():
-    #                     if crys.area*(1-AREA_PCT) <= target_crys.areas[len(target_crys.areas) -1] <= crys.area*(1+AREA_PCT):
-    #                         target_crys.add_crystalobject(crys)
-    #                         c_central_list.pop(index_closest)
-    #                         c_crystal_areas_list.remove(crys.area)
+    # Calculate and plot the distribution of area and radius.
+    # A_distribution(frame_list)
+    # r_distribution(frame_list)
 
-    #         # else:
-    #         #     print(f'Attempting to match {target_crys.count_num}')
-    #         #     target_area = target_crys.areas[len(target_crys.areas) -1]
-    #         #     for areas in itertools.combinations(c_crystal_areas_list, 2):
-    #         #         if  target_area*(1-AREA_PCT) <= sum(areas) <= target_area*(1+AREA_PCT):
-    #         #             print(f'found {sum(areas)} being equal to {target_area} ???')
-    #         #             index_list = [c_crystal_areas_list.index(area) for area in areas]
-    #         #             crys_list = []
-    #         #             for crys in frame_list[i].crystalobjects:
-    #         #                 for ind in index_list:
-    #         #                     if crys.area == c_crystal_areas_list[ind]:
-    #         #                         crys_list.append(crys)
-    #         #             obj_center_contained = False
-    #         #             print('**********')
-    #         #             for crys in crys_list:
-    #         #                 print(f'---------{len(crys_list)}')
-    #         #                 if target_crys.min_y*(1-CENTER_PCT) <= crys.center_arr[1] <= target_crys.max_y*(1+CENTER_PCT) and target_crys.min_x*(1-CENTER_PCT) <= crys.center_arr[0] <= target_crys.max_x*(1+CENTER_PCT):
-    #         #                     print(f'{target_crys.min_y*(1-CENTER_PCT)} <= {crys.center_arr[1]} <= {target_crys.max_y*(1+CENTER_PCT)}')
-    #         #                     print(f'{target_crys.min_x*(1-CENTER_PCT)} <= {crys.center_arr[0]} <= {target_crys.max_x*(1+CENTER_PCT)}')
-    #         #                     obj_center_contained = True
-    #         #                 else:
-    #         #                     obj_center_contained = False
-    #         #                     break
-    #         #             if obj_center_contained == True:
-    #         #                 print('YAAASS QUEEN')
-    #         #                 if len(crys_list) == 2:
-    #         #                     print('doubleeee')
-    #         #                     target_crys.add_dubble_crystalobject(crys_list[0], crys_list[1])
-    #         #                 if len(crys_list) == 3:
-    #         #                     print('T-T-T-T-tripple comboooooooo! Figure this shit out')
-    #                     # From the crystals in crys_list, find max_x, max_y, etc.
-    #                     # Check if these values are within min/max y and x of CrystalRecog
-
-    #     # For each Crystal:
-    #         # Set up detection box (Upper and lower x and y coords + some margin)
-    #         # Find all center points in detection box (Just center points will work?)
-    #             # Find/identify corresponding crystals
-    #             # Check if all contour points of identified crystals are in the detection box
-    #         # Compare area of crystalRecog to previous one.
-    #             # Evaluate if adding other identified crystals would be closer to previous area, together with checking if the
-    #                 #combined center point would be closer to the previous center point of the Crystal.
-    #                     # If yes, loop backwards through frames, and add the additional crystal attributes to crystal Recog
-    #                     # Then continue in loop as normal
-
-
-    #     post_frame_center_coord_count = len(c_central_list)
-    #     # print('------------------------------------------------------')
-    #     # print(f'Frame # {i + 1}:')
-    #     # print(f'C coords went from {pre_frame_center_coord_count} to {post_frame_center_coord_count}  ')
-    #     # print(f'Used count: {pre_frame_center_coord_count - post_frame_center_coord_count }')
-    # crystal_linking_time = (time.time() - start_time) - img_processing_time # Log time it took to link crystals
-
-
-    # crystal_tracking_count = len(crystal_tracking_list)
-    # # for i,crystallcoll in enumerate(crystal_tracking_list):
-    # #     if crystallcoll.count_num == 79:
-    # #         print(crystallcoll.areas)
-    # #     print(f'Plotting Crystal {i}/{crystal_tracking_count}', end = '\r')
-    # #     crystallcoll.plot_contours_across_frames(file_count, output_img_dir)
-    # for i,b in enumerate(crystal_tracking_list):
-    #     print(f'Plotting Crystal {i}/{crystal_tracking_count}', end = '\r')
-    #     if b.c_count > MIN_PLOT_FRAMES:
-
-    #         space_scale = 86.7*10**(-9) #m
-    #         gamma_0 = 29.8 #mJ/m^2
-    #         d_tolman = 0.24*10**(-9) #m
-    #         solution_thickness = 2*10**(-6)
-
-    #         fig = plt.figure()
-    #         fig.tight_layout()
-    #         gs1 = fig.add_gridspec(nrows=2, ncols=2)
-    #         fig_ax1 = fig.add_subplot(gs1[0, 0])
-    #         fig_ax1.title.set_text('Contours')
-        
-    #         for contour in b.s_contours: 
-    #             fig_ax1.plot(contour[...,0], contour[...,1])
-    #         fig_ax1.invert_yaxis()
-    #         fig_ax1.title.set_fontsize(12)
-    #         fig.suptitle(t=f'#{b.count_num}; FU{b.c_count}/{file_count}', fontsize=12, va='top')
-
-    #         fig_ax2 = fig.add_subplot(gs1[0, 1])
-    #         fig_ax2.title.set_text('Area')
-    #         fig_ax2.plot(np.asarray(b.areas)*space_scale*space_scale*10**12)
-    #         fig_ax2.set_ylabel('area [um^2]')
-    #         fig_ax2.set_xlabel('time')
-    #         fig_ax2.title.set_fontsize(10)
-
-    #         fig_ax3 = fig.add_subplot(gs1[1, 0])
-    #         fig_ax3.title.set_text('Mean curvatures')
-    #         fig_ax3.plot(np.asarray(b.mean_curvatures)/(space_scale*10**6))
-    #         fig_ax3.set_ylabel('mean curvature [1/um]')
-    #         fig_ax3.set_xlabel('time')
-    #         fig_ax3.title.set_fontsize(10)
-
-           
-
-    #         fig_ax4 = fig.add_subplot(gs1[1, 1])
-    #         fig_ax4.title.set_text('Gibbs surface energy')
-    #         G = 2* gamma_0*np.asarray(b.areas)*space_scale*space_scale + (gamma_0 * np.asarray(b.lengths) * space_scale* solution_thickness *(1-((np.asarray(b.mean_curvatures)/space_scale) *2*d_tolman)))
-    #         fig_ax4.plot(G)
-    #         fig_ax4.set_ylabel('G_total [mJ]')
-    #         fig_ax4.set_xlabel('time')
-    #         fig_ax4.title.set_fontsize(10)
-
-    #         frames_used = ','.join(b.frames_used)
-    #         fig.text(0.02, 0.02, 'FU: ' + frames_used, color='grey',fontsize=4)
-    #         fig.subplots_adjust(left=None, bottom=None, right=None, top=0.90,
-    #             wspace=0.3, hspace=0.5)
-    #         fig.savefig(os.path.join(output_img_dir, f'newtest_img{b.count_num}.png'))
-    #         plt.close()
-
-    times, Q = calculate_volume_fraction(frame_list)
-
-    N = amount_of_crystals_per_ROIarea(frame_list)
-
-    A = avg_crystal_area(frame_list)
-
-    r = mean_radius(frame_list)
-
-    r3 = mean_radius3(frame_list)
-
-    l = circumference(frame_list)
-
-    A_distribution(frame_list)
-
+    # Calculate area of ROI.
     ROI_area = frame_list[0].img_height * frame_list[0].img_width
-    export_quantities(times, Q, N, A, r, r3, l, ROI_area)
 
+    # Export all extracted quantities to a csv file.
+    export_quantities(times, Q, N, A, r_k, r_k3, mean_r3_A_div_l, l, ROI_area, mr_k)
+
+    # Fit parameters to the extracted data and plot the extracted data with their fits.
     try:
         import fit_data
         df_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.path.basename(IMAGE_OUTPUT_FOLDER_NAME) + '.csv')
         df = pd.read_csv(df_path, index_col='index').dropna() # Drop rows which have at least one NaN.
-        df.times = df.times * 13 / 21.52 # Correct for faster playback speed.
-        df['time_corrected'] = True
 
+        # Correct for faster playback speed. Only do this if you know you need this!
+        df.times = df.times * 13 / 21.52 
+        df['time_corrected'] = True # Mark current csv file as 'corrected for time'
+
+        # Perform fitting.
         print("Fitting parameters.")
         df = fit_data.fitting(df, df_path)
         fit_data.plot(df, df_path)
@@ -1046,15 +933,19 @@ if __name__ == "__main__":
             print("Cannot plot A's, because plot_A.py is missing.")
 
         try:
-            # import plot_r3
-            import r3_alternative
-            print("Plotting r^3.")
+            # import plot_critical.py
+            # print("Plotting r^3.")
+            # r3_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.pardir)
+            # df_r3 = plot_critical.extract_r3(r3_path)
+            # plot_critical.plot_r3(df_r3, r3_path)
+
+            import plot_r3
             r3_path = os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.pardir)
-            df_r3 = r3_alternative.extract_r3(r3_path)
-            r3_alternative.plot_r3(df_r3, r3_path)
+            df_r3 = plot_r3.extract_r3(r3_path)
+            plot_r3.plot_r3(df_r3, r3_path)
         except FileNotFoundError:
-            # print("Cannot plot r^3, because plot_r3.py is missing.")
-            print("Cannot plot r^3, because r3_alternative.py is missing.")
+            # print("Cannot plot r^3, because plot_critical.py is missing.")
+            print("Cannot plot r^3, because plot_r3.py is missing.")
 
         try:
             import plot_k
@@ -1067,19 +958,10 @@ if __name__ == "__main__":
     except FileNotFoundError:
         print("Cannot fit, because fit_data.py is missing.")
 
-
-
-    # for i, crystallcoll in enumerate(crystal_tracking_list):
-    #     df_i = pd.concat(crystallcoll.s_contours_dfs)
-    #     csv_file_name = f'{crystallcoll.count_num}.csv'
-    #     csv_export_dir_i = os.path.join(csv_export_dir, csv_file_name)
-    #     df_i.to_csv(csv_export_dir_i)
-
     print('######################################################')
     print(f'{os.path.basename(INPUT_FOLDER_NAME)} done.')
     print(f'img processing time: {img_processing_time} ')
-    # print(f'Crystal linking time : {crystal_linking_time}')
-    print("Total runtime --- %s seconds ---" % (time.time() - start_time)) # To see how long program
+    print("Total runtime --- %s seconds ---" % (time.time() - start_time))
     print('######################################################')
 
 

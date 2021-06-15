@@ -1,3 +1,9 @@
+"""
+Siem de Jong
+Plot the time evolution of the areas of selected files.
+Append x to files to mark them for exclusion.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
