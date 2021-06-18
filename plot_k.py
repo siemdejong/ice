@@ -38,8 +38,8 @@ def extract_k(path):
 
 def plot_k(df, output_plot_dir):
     """Plot the Q over time with different lines for different IBP concentration."""
-    fig = plt.figure(figsize=(10, 15))
-    gs = fig.add_gridspec(2, 1)
+    fig = plt.figure(figsize=(15, 7))
+    gs = fig.add_gridspec(1, 2)
     axs = gs.subplots()
 
     # Sort data on IBP concentration.
@@ -85,11 +85,12 @@ def plot_k(df, output_plot_dir):
         # ax.set_yticks([-0.00001, -0.0001, -0.001, -0.01, -0.1, 0])
         ax.set_xticklabels(np.arange(10, 40, 10))
         # ax.set_yticklabels([-0.00001, -0.0001, -0.001, -0.01, -0.1, 0], fontsize=20, **pfont)
-        ax.set_ylabel(r"$k_d$ [$\mathrm{\mu m}^3 \mathrm{min}^{-1}$]")
         # ax.tick_params(axis='y', which='major', labelsize=20)
         # ax.set_ylim([-1e-3, 5])
+    axs[0].set_xlabel(r"[Sucrose] [\% w/w]")
     axs[1].set_xlabel(r"[Sucrose] [\% w/w]")
-    # axs[1].legend(loc='center left')
+    axs[0].set_ylabel(r"$k_d$ [$\mathrm{\mu m}^3 \mathrm{min}^{-1}$]")
+    axs[1].legend(loc='center right', prop={'size': 20})
 
     # fig.suptitle(r'k from $\langle 2A/l\rangle^3$')
 

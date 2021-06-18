@@ -13,8 +13,11 @@ from tkinter import *
 import os
 import matplotlib.font_manager as font_manager
 
-pfont = {'fontname':'Palatino Linotype'}
-font = font_manager.FontProperties(family='Palatino Linotype', size=20)
+plt.style.use(['science', 'scatter'])
+plt.rcParams.update({
+    "font.family": "serif",   # specify font family here
+    "font.serif": ["Palatino Linotype"],  # specify font here
+    "font.size": 30})          # specify font size here
 
 def extract_k(path):
     """Extract ice volume fraction information and fit results from csv file."""
@@ -37,8 +40,8 @@ def extract_k(path):
 def plot_k(df, output_plot_dir):
     """Plot the Q over time with different lines for different IBP concentration."""
 
-    fig = plt.figure(figsize=(10, 15))
-    gs = fig.add_gridspec(2, 1)
+    fig = plt.figure(figsize=(15, 7))
+    gs = fig.add_gridspec(1, 2)
     axs = gs.subplots()
 
     # Sort data on IBP concentration.
@@ -78,17 +81,19 @@ def plot_k(df, output_plot_dir):
     # Settings for the axes.
     for title, ax in zip(['WT', 'T18N'], axs):
         ax.set_yscale('symlog', linthresh=1e-4) # around 0 a linear scale (because log(0)=-inf)
-        ax.set_title(title, fontsize=30, **pfont)
+        ax.set_title(title)
         # ax.set_yticks(np.arange(0, 1.1, .1))
         ax.set_xticks(np.arange(10, 40, 10))
         # ax.set_yticks([-0.00001, -0.0001, -0.001, -0.01, -0.1, 0])
-        ax.set_xticklabels(np.arange(10, 40, 10), fontsize=20, **pfont)
+        ax.set_xticklabels(np.arange(10, 40, 10))
         # ax.set_yticklabels([-0.00001, -0.0001, -0.001, -0.01, -0.1, 0], fontsize=20, **pfont)
-        ax.set_ylabel(r"$k_{d,\mathrm{cr}}$ [$\mu m^3 s^{-1}$]", fontsize=30, **pfont)
+        
         ax.tick_params(axis='y', which='major', labelsize=20)
         ax.set_ylim([-1e-3, 1])
-    axs[1].set_xlabel(r"[Sucrose] [% w/w]", fontsize=30, **pfont)
-    axs[1].legend(prop=font, loc='lower right')
+    axs[0].set_xlabel(r"[Sucrose] [\% w/w]")
+    axs[1].set_xlabel(r"[Sucrose] [\% w/w]")
+    axs[0].set_ylabel(r"$k_{d,\mathrm{cr}}$ [\textmu m$^3$ s$^{-1}$]")
+    axs[1].legend(prop={'size': 20}, loc='lower right')
 
     # from matplotlib.pyplot import gca
     # a = gca()

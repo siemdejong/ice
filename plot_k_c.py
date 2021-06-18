@@ -45,8 +45,8 @@ def sigmoidal_func(c, kd0, ci, s):
 
 def plot_Q(df, output_plot_dir):
     """Plot the Q over time with different lines for different IBP concentration."""
-    fig = plt.figure(figsize=(10, 15))
-    gs = fig.add_gridspec(2, 1)
+    fig = plt.figure(figsize=(15, 7))
+    gs = fig.add_gridspec(1, 2)
     axs = gs.subplots()
 
     df = df.sort_values('IBP_conc').loc[df['sucrose_conc'].eq(30)]
@@ -76,17 +76,21 @@ def plot_Q(df, output_plot_dir):
     # axs[0].plot(xdata1, sigmoidal_func(xdata1, *popt1), 'r')
     # axs[1].plot(xdata2, sigmoidal_func(xdata2, *popt2), 'r')
 
-    # Plot the fits using values calculated by origin (TODO: currently has difficulty with plotting)
-    xdata1 = np.linspace(xdata1[0], xdata1[-1], 1000)
-    xdata2 = np.linspace(xdata2[0], xdata2[-1], 1000)
-    axs[0].plot(xdata1, sigmoidal_func(np.array(xdata1), 2.96565, 0.59325, 0.00264), 'r')
+    # Plot the fits using values calculated by origin
+    # xdata1 = np.linspace(xdata1[0], xdata1[-1], 1000)
+    # xdata2 = np.linspace(xdata2[0], xdata2[-1], 1000)
+    xs = np.linspace(0, 10, 10000)
+    axs[0].plot(xs, sigmoidal_func(xs, 2.96565, 0.59325, 0.00264), 'r')
     # axs[1].plot(xdata1, sigmoidal_func(np.array(xdata1), 2.96565, 0.59325, 0.00264), 'r')
-    axs[1].plot(xdata2, sigmoidal_func(np.array(xdata2), 2.96565, 0.59325, 0.00264), 'r')
+    axs[1].plot(xs, sigmoidal_func(xs, 2.96565, 0.59325, 0.00264), 'r')
+
+    axs[0].plot(0.59325, sigmoidal_func(0.59325, 2.96565, 0.59325, 0.00264), ms=10, marker='o', markerfacecolor='none', markeredgewidth=2, markeredgecolor='red')
+    axs[1].plot(0.59325, sigmoidal_func(0.59325, 2.96565, 0.59325, 0.00264), ms=10, marker='o', markerfacecolor='none', markeredgewidth=2, markeredgecolor='red')
 
     axs[0].set_xlabel(r"[rQAE WT] [\textmu M]")#, fontsize=30)
     axs[1].set_xlabel(r"[rQAE T18N] [\textmu M]")#, fontsize=30)
     axs[0].set_ylabel(r"$k_d$ [\textmu m$^3 \mathrm{min}^{-1}$]")#, fontsize=30)
-    axs[1].set_ylabel(r"$k_d$ [\textmu m$^3 \mathrm{min}^{-1}$]")#, fontsize=30)
+    # axs[1].set_ylabel(r"$k_d$ [\textmu m$^3 \mathrm{min}^{-1}$]")#, fontsize=30)
     # axs[0].legend()#fontsize=20)
 
     fig.savefig(os.path.join(output_plot_dir, 'k_c.pdf'), bbox_inches='tight')

@@ -33,7 +33,7 @@ fig, ax = plt.subplots(figsize=(10, 10))
 
 ax.scatter(df['times'], df['Rcr3'], label=r'$R_{\mathrm{cr}}^3 = \langle 2\cdot A/l\rangle^3$', color='m', marker='D')
 ax.scatter(df['times'], df['mean_r3_A_div_l'], label=r'$\langle R\rangle^3 = (2\cdot\langle A\rangle /\langle l\rangle)^3$', color='c', marker='x')
-ax.scatter(df['times'], df['r_k3'], label=r'$\langle R \rangle_{\kappa}^3 = 1/\langle K\rangle^3$', color='y', marker='8')
+ax.scatter(df['times'], df['r_k3'], label=r'$\langle R \rangle_{\kappa}^3 = 1/\langle \kappa\rangle^3$', color='y', marker='8')
 
 ax.set_ylabel(r'$R^3$ [$\mathrm{\mu m}^3$]')
 ax.set_xlabel('Time [s]')

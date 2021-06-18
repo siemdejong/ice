@@ -38,8 +38,8 @@ def extract_Q(path):
 
 def plot_Q(df, output_plot_dir):
     """Plot the Q over time with different lines for different IBP concentration."""
-    fig = plt.figure(figsize=(10, 15))
-    gs = fig.add_gridspec(2, 1)
+    fig = plt.figure(figsize=(15, 7))
+    gs = fig.add_gridspec(1, 2)
     axs = gs.subplots()
 
     # Sort data on IBP concentration.
@@ -71,10 +71,11 @@ def plot_Q(df, output_plot_dir):
         ax.set_xticks(np.arange(10, 40, 10))
         ax.set_xticklabels(np.around(np.arange(10, 40, 10),1))#, fontsize=20)
         ax.set_yticklabels(np.around(np.arange(0, 1.1, .2),1))#, fontsize=20)
+    axs[0].set_xlabel(r"[Sucrose] [\% w/w]")#, fontsize=30)
     axs[1].set_xlabel(r"[Sucrose] [\% w/w]")#, fontsize=30)
     axs[0].set_ylabel("Q")#, fontsize=30)
-    axs[1].set_ylabel("Q")#, fontsize=30)
-    axs[0].legend()#fontsize=20)
+    # axs[1].set_ylabel("Q")#, fontsize=30)
+    axs[1].legend()#fontsize=20)
 
     fig.savefig(os.path.join(output_plot_dir, 'volume_fractions_summary.pdf'), bbox_inches='tight')
 
