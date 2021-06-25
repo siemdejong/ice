@@ -812,15 +812,15 @@ def export_quantities(times, Q, N, A, r_k, r_k3, mean_r3_A_div_l, l, ROI_area, m
     """Export the calculated quantities to csv."""
     data = {
         'times': times,
-        'Q': Q,
-        'N': N,
-        'A': A,
-        'r_k': r_k,
-        'r_k3': r_k3,
-        'mean_r3_A_div_l': mean_r3_A_div_l,
-        'l': l,
+        'Q': Q, # Ice volume fraction.
+        'N': N, # Number of crystals.
+        'A': A, # Mean areas.
+        'r_k': r_k, # radius of curvature.
+        'r_k3': r_k3, # radius of curvature cubed.
+        'mean_r3_A_div_l': mean_r3_A_div_l, # mean radius cubed (calculated by dividing A by l for every crystal).
+        'l': l, # Mean perimeter.
         'ROI_area': ROI_area,
-        'mr_k': mr_k
+        'mr_k': mr_k # Median radius of curvature.
     }
     df = pd.DataFrame(data)
     df.to_csv(os.path.join(IMAGE_OUTPUT_FOLDER_NAME, os.path.basename(IMAGE_OUTPUT_FOLDER_NAME) + '.csv'), index_label='index')
