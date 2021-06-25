@@ -59,28 +59,28 @@ def plot_k(df, output_plot_dir):
     # Plot the data.
     for data, ax in zip([df_X_0, df_X_0], axs):
         ax.errorbar(data['sucrose_conc'],
-                    data['k_opt']*space_scale**3*1e18,
-                    yerr=data['k_err']*space_scale**3*1e18,
+                    data['k_opt']*space_scale**3*1e18*60,
+                    yerr=data['k_err']*space_scale**3*1e18*60,
                     label="0uM", fmt='o', capsize=3, color='tab:blue', ms = 15)
     for data, ax in zip([df_WT_1, df_T18N_1], axs):
         ax.errorbar(data['sucrose_conc'],
-                    data['k_opt']*space_scale**3*1e18,
-                    yerr=data['k_err']*space_scale**3*1e18,
+                    data['k_opt']*space_scale**3*1e18*60,
+                    yerr=data['k_err']*space_scale**3*1e18*60,
                     label="1uM", fmt='x', capsize=3, color='tab:green', ms = 15)        
     for data, ax in zip([df_WT_4, df_T18N_4], axs):
         ax.errorbar(data['sucrose_conc'],
-                    data['k_opt']*space_scale**3*1e18,
-                    yerr=data['k_err']*space_scale**3*1e18,
+                    data['k_opt']*space_scale**3*1e18*60,
+                    yerr=data['k_err']*space_scale**3*1e18*60,
                     label="4uM", fmt='v', capsize=3, color='tab:red', ms = 15)
     for data, ax in zip([df_WT_10, df_T18N_10], axs):
         ax.errorbar(data['sucrose_conc'],
-                    data['k_opt']*space_scale**3*1e18,
-                    yerr=data['k_err']*space_scale**3*1e18,
+                    data['k_opt']*space_scale**3*1e18*60,
+                    yerr=data['k_err']*space_scale**3*1e18*60,
                     label="10uM", fmt='s', capsize=3, color='tab:orange', ms = 15)
 
     # Settings for the axes.
     for title, ax in zip(['WT', 'T18N'], axs):
-        ax.set_yscale('symlog', linthresh=1e-4) # around 0 a linear scale (because log(0)=-inf)
+        ax.set_yscale('symlog', linthresh=1e-2) # around 0 a linear scale (because log(0)=-inf)
         ax.set_title(title)
         # ax.set_yticks(np.arange(0, 1.1, .1))
         ax.set_xticks(np.arange(10, 40, 10))
@@ -89,10 +89,10 @@ def plot_k(df, output_plot_dir):
         # ax.set_yticklabels([-0.00001, -0.0001, -0.001, -0.01, -0.1, 0], fontsize=20, **pfont)
         
         ax.tick_params(axis='y', which='major', labelsize=20)
-        ax.set_ylim([-1e-3, 1])
+        ax.set_ylim([-0.5e-1, 100])
     axs[0].set_xlabel(r"[Sucrose] [\% w/w]")
     axs[1].set_xlabel(r"[Sucrose] [\% w/w]")
-    axs[0].set_ylabel(r"$k_{d,\mathrm{cr}}$ [\textmu m$^3$ s$^{-1}$]")
+    axs[0].set_ylabel(r"$k_{d,\mathrm{cr}}$ [\textmu m$^3$ min$^{-1}$]")
     axs[1].legend(prop={'size': 20}, loc='lower right')
 
     # from matplotlib.pyplot import gca

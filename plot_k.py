@@ -87,6 +87,8 @@ def plot_k(df, output_plot_dir):
         # ax.set_yticklabels([-0.00001, -0.0001, -0.001, -0.01, -0.1, 0], fontsize=20, **pfont)
         # ax.tick_params(axis='y', which='major', labelsize=20)
         # ax.set_ylim([-1e-3, 5])
+        ax.set_ylim([-0.5e-1, 100])
+        ax.tick_params(axis='y', which='major', labelsize=20)
     axs[0].set_xlabel(r"[Sucrose] [\% w/w]")
     axs[1].set_xlabel(r"[Sucrose] [\% w/w]")
     axs[0].set_ylabel(r"$k_d$ [$\mathrm{\mu m}^3 \mathrm{min}^{-1}$]")

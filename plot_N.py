@@ -70,72 +70,84 @@ def plot_N_per_A(dfs, output_plot_dir, A):
         df['N_per_A_est'] = change_scale(exp_decrease_func(df.times, df.N0_opt, df.N_tau_opt, df.N_end_opt))
         if df['sucrose_conc'].iloc[0] == 10:
             if df['IBP'].iloc[0] == 'X':
-                axs[0][0].scatter(df['times'], df['N_per_A'], label=r"0 $\mu$M", s=15, marker='o')
-                axs[0][0].plot(df['times'], df['N_per_A_est'])
-                axs[0][1].scatter(df['times'], df['N_per_A'], label=r"0 $\mu$M", s=15, marker='o')
-                axs[0][1].plot(df['times'], df['N_per_A_est'])
+                axs[0][0].scatter(df['times'], df['N_per_A'], label=r"0 $\mu$M", s=15, marker='o', color='tab:blue')
+                axs[0][0].plot(df['times'], df['N_per_A_est'], color='tab:blue')
+                axs[0][1].scatter(df['times'], df['N_per_A'], label=r"0 $\mu$M", s=15, marker='o', color='tab:blue')
+                axs[0][1].plot(df['times'], df['N_per_A_est'], color='tab:blue')
             elif df['IBP'].iloc[0] == 'WT':
                 if df['IBP_conc'].iloc[0] == 1:
-                    axs[0][0].scatter(df['times'], df['N_per_A'], label=r"1 \textmu M", s=15, marker='x')
+                    axs[0][0].scatter(df['times'], df['N_per_A'], label=r"1 \textmu M", s=15, marker='x', color='tab:green')
+                    axs[0][0].plot(df['times'], df['N_per_A_est'], color='tab:green')
                 elif df['IBP_conc'].iloc[0] == 4:
-                    axs[0][0].scatter(df['times'], df['N_per_A'], label=r"4 \textmu M", s=15, marker='v')
+                    axs[0][0].scatter(df['times'], df['N_per_A'], label=r"4 \textmu M", s=15, marker='v', color='tab:red')
+                    axs[0][0].plot(df['times'], df['N_per_A_est'], color='tab:red')
                 elif df['IBP_conc'].iloc[0] == 10:
-                    axs[0][0].scatter(df['times'], df['N_per_A'], label=r"10 \textmu M", s=15, marker='s')
-                axs[0][0].plot(df['times'], df['N_per_A_est'])
+                    axs[0][0].scatter(df['times'], df['N_per_A'], label=r"10 \textmu M", s=15, marker='s', color='tab:orange')
+                    axs[0][0].plot(df['times'], df['N_per_A_est'], color='tab:orange')
             elif df['IBP'].iloc[0] == 'T18N':
                 if df['IBP_conc'].iloc[0] == 1:
-                    axs[0][1].scatter(df['times'], df['N_per_A'], label=r"1 \textmu M", s=15, marker='x')
+                    axs[0][1].scatter(df['times'], df['N_per_A'], label=r"1 \textmu M", s=15, marker='x', color='tab:green')
+                    axs[0][1].plot(df['times'], df['N_per_A_est'], color='tab:green')
                 elif df['IBP_conc'].iloc[0] == 4:
-                    axs[0][1].scatter(df['times'], df['N_per_A'], label=r"4 \textmu M", s=15, marker='v')
+                    axs[0][1].scatter(df['times'], df['N_per_A'], label=r"4 \textmu M", s=15, marker='v', color='tab:red')
+                    axs[0][1].plot(df['times'], df['N_per_A_est'], color='tab:red')
                 elif df['IBP_conc'].iloc[0] == 10:
-                    axs[0][1].scatter(df['times'], df['N_per_A'], label=r"10 \textmu M", s=15, marker='s')
-                axs[0][1].plot(df['times'], df['N_per_A_est'])
+                    axs[0][1].scatter(df['times'], df['N_per_A'], label=r"10 \textmu M", s=15, marker='s', color='tab:orange')
+                    axs[0][1].plot(df['times'], df['N_per_A_est'], color='tab:orange')
 
         elif df['sucrose_conc'].iloc[0] == 20:
             if df['IBP'].iloc[0] == 'X':
-                axs[1][0].scatter(df['times'], df['N_per_A'], label=r"0 \textmu M", s=15, marker='o')
-                axs[1][0].plot(df['times'], df['N_per_A_est'])
-                axs[1][1].scatter(df['times'], df['N_per_A'], label=r"0 \textmu M", s=15, marker='o')
-                axs[1][1].plot(df['times'], df['N_per_A_est'])
+                axs[1][0].scatter(df['times'], df['N_per_A'], label=r"0 \textmu M", s=15, marker='o', color='tab:blue')
+                axs[1][0].plot(df['times'], df['N_per_A_est'], color='tab:blue')
+                axs[1][1].scatter(df['times'], df['N_per_A'], label=r"0 \textmu M", s=15, marker='o', color='tab:blue')
+                axs[1][1].plot(df['times'], df['N_per_A_est'], color='tab:blue')
             elif df['IBP'].iloc[0] == 'WT':
                 if df['IBP_conc'].iloc[0] == 1:
-                    axs[1][0].scatter(df['times'], df['N_per_A'], label=r"1 \textmu M", s=15, marker='x')
+                    axs[1][0].scatter(df['times'], df['N_per_A'], label=r"1 \textmu M", s=15, marker='x', color='tab:green')
+                    axs[1][0].plot(df['times'], df['N_per_A_est'], color='tab:green')
                 elif df['IBP_conc'].iloc[0] == 4:
-                    axs[1][0].scatter(df['times'], df['N_per_A'], label=r"4 \textmu M", s=15, marker='v')
+                    axs[1][0].scatter(df['times'], df['N_per_A'], label=r"4 \textmu M", s=15, marker='v', color='tab:red')
+                    axs[1][0].plot(df['times'], df['N_per_A_est'], color='tab:red')
                 elif df['IBP_conc'].iloc[0] == 10:
-                    axs[1][0].scatter(df['times'], df['N_per_A'], label=r"10 \textmu M", s=15, marker='s')
-                axs[1][0].plot(df['times'], df['N_per_A_est'])
+                    axs[1][0].scatter(df['times'], df['N_per_A'], label=r"10 \textmu M", s=15, marker='s', color='tab:orange')
+                    axs[1][0].plot(df['times'], df['N_per_A_est'], color='tab:orange')
             elif df['IBP'].iloc[0] == 'T18N':
                 if df['IBP_conc'].iloc[0] == 1:
-                    axs[1][1].scatter(df['times'], df['N_per_A'], label=r"1 \textmu M", s=15, marker='x')
+                    axs[1][1].scatter(df['times'], df['N_per_A'], label=r"1 \textmu M", s=15, marker='x', color='tab:green')
+                    axs[1][1].plot(df['times'], df['N_per_A_est'], color='tab:green')
                 elif df['IBP_conc'].iloc[0] == 4:
-                    axs[1][1].scatter(df['times'], df['N_per_A'], label=r"4 \textmu M", s=15, marker='v')
+                    axs[1][1].scatter(df['times'], df['N_per_A'], label=r"4 \textmu M", s=15, marker='v', color='tab:red')
+                    axs[1][1].plot(df['times'], df['N_per_A_est'], color='tab:red')
                 elif df['IBP_conc'].iloc[0] == 10:
-                    axs[1][1].scatter(df['times'], df['N_per_A'], label=r"10 \textmu M", s=15, marker='s')
-                axs[1][1].plot(df['times'], df['N_per_A_est'])
+                    axs[1][1].scatter(df['times'], df['N_per_A'], label=r"10 \textmu M", s=15, marker='s', color='tab:orange')
+                    axs[1][1].plot(df['times'], df['N_per_A_est'], color='tab:orange')
 
         elif df['sucrose_conc'].iloc[0] == 30:
             if df['IBP'].iloc[0] == 'X':
-                axs[2][0].scatter(df['times'], df['N_per_A'], label=r"0 \textmu M", s=15, marker='o')
-                axs[2][0].plot(df['times'], df['N_per_A_est'])
-                axs[2][1].scatter(df['times'], df['N_per_A'], label=r"0 \textmu M", s=15, marker='o')
-                axs[2][1].plot(df['times'], df['N_per_A_est'])
+                axs[2][0].scatter(df['times'], df['N_per_A'], label=r"0 \textmu M", s=15, marker='o', color='tab:blue')
+                axs[2][0].plot(df['times'], df['N_per_A_est'], color='tab:blue')
+                axs[2][1].scatter(df['times'], df['N_per_A'], label=r"0 \textmu M", s=15, marker='o', color='tab:blue')
+                axs[2][1].plot(df['times'], df['N_per_A_est'], color='tab:blue')
             elif df['IBP'].iloc[0] == 'WT':
                 if df['IBP_conc'].iloc[0] == 1:
-                    axs[2][0].scatter(df['times'], df['N_per_A'], label=r"1 \textmu M", s=15, marker='x')
+                    axs[2][0].scatter(df['times'], df['N_per_A'], label=r"1 \textmu M", s=15, marker='x', color='tab:green')
+                    axs[2][0].plot(df['times'], df['N_per_A_est'], color='tab:green')
                 elif df['IBP_conc'].iloc[0] == 4:
-                    axs[2][0].scatter(df['times'], df['N_per_A'], label=r"4 \textmu M", s=15, marker='v')
+                    axs[2][0].scatter(df['times'], df['N_per_A'], label=r"4 \textmu M", s=15, marker='v', color='tab:red')
+                    axs[2][0].plot(df['times'], df['N_per_A_est'], color='tab:red')
                 elif df['IBP_conc'].iloc[0] == 10:
-                    axs[2][0].scatter(df['times'], df['N_per_A'], label=r"10 \textmu M", s=15, marker='s')
-                axs[2][0].plot(df['times'], df['N_per_A_est'])
+                    axs[2][0].scatter(df['times'], df['N_per_A'], label=r"10 \textmu M", s=15, marker='s', color='tab:orange')
+                    axs[2][0].plot(df['times'], df['N_per_A_est'], color='tab:orange')
             elif df['IBP'].iloc[0] == 'T18N':
                 if df['IBP_conc'].iloc[0] == 1:
-                    axs[2][1].scatter(df['times'], df['N_per_A'], label=r"1 \textmu M", s=15, marker='x')
+                    axs[2][1].scatter(df['times'], df['N_per_A'], label=r"1 \textmu M", s=15, marker='x', color='tab:green')
+                    axs[2][1].plot(df['times'], df['N_per_A_est'], color='tab:green')
                 elif df['IBP_conc'].iloc[0] == 4:
-                    axs[2][1].scatter(df['times'], df['N_per_A'], label=r"4 \textmu M", s=15, marker='v')
+                    axs[2][1].scatter(df['times'], df['N_per_A'], label=r"4 \textmu M", s=15, marker='v', color='tab:red')
+                    axs[2][1].plot(df['times'], df['N_per_A_est'], color='tab:red')
                 elif df['IBP_conc'].iloc[0] == 10:
-                    axs[2][1].scatter(df['times'], df['N_per_A'], label=r"10 \textmu M", s=15, marker='s')
-                axs[2][1].plot(df['times'], df['N_per_A_est'])
+                    axs[2][1].scatter(df['times'], df['N_per_A'], label=r"10 \textmu M", s=15, marker='s', color='tab:orange')
+                    axs[2][1].plot(df['times'], df['N_per_A_est'], color='tab:orange')
     
     # Order legend (https://stackoverflow.com/a/46160465/8797886)
     handles, labels = plt.gca().get_legend_handles_labels()

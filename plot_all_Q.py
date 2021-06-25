@@ -58,72 +58,84 @@ def plot_all_Q(dfs, output_plot_dir):
         df['Q_opt'] = jmak_func(df.times, df.Q_opt, df.Q_t0_opt, df.Q_tau_opt, 1)
         if df['sucrose_conc'].iloc[0] == 10:
             if df['IBP'].iloc[0] == 'X':
-                axs[0][0].scatter(df['times'], df['Q'], label=r"0 $\mu$M", s=15, marker='o')
-                axs[0][0].plot(df['times'], df['Q_opt'])
-                axs[0][1].scatter(df['times'], df['Q'], label=r"0 $\mu$M", s=15, marker='o')
-                axs[0][1].plot(df['times'], df['Q_opt'])
+                axs[0][0].scatter(df['times'], df['Q'], label=r"0 $\mu$M", s=15, marker='o', color='tab:blue')
+                axs[0][0].plot(df['times'], df['Q_opt'], color='tab:blue')
+                axs[0][1].scatter(df['times'], df['Q'], label=r"0 $\mu$M", s=15, marker='o', color='tab:blue')
+                axs[0][1].plot(df['times'], df['Q_opt'], color='tab:blue')
             elif df['IBP'].iloc[0] == 'WT':
                 if df['IBP_conc'].iloc[0] == 1:
-                    axs[0][0].scatter(df['times'], df['Q'], label=r"1 \textmu M", s=15, marker='x')
+                    axs[0][0].scatter(df['times'], df['Q'], label=r"1 \textmu M", s=15, marker='x', color='tab:green')
+                    axs[0][0].plot(df['times'], df['Q_opt'], color='tab:green')
                 elif df['IBP_conc'].iloc[0] == 4:
-                    axs[0][0].scatter(df['times'], df['Q'], label=r"4 \textmu M", s=15, marker='v')
+                    axs[0][0].scatter(df['times'], df['Q'], label=r"4 \textmu M", s=15, marker='v', color='tab:red')
+                    axs[0][0].plot(df['times'], df['Q_opt'], color='tab:red')
                 elif df['IBP_conc'].iloc[0] == 10:
-                    axs[0][0].scatter(df['times'], df['Q'], label=r"10 \textmu M", s=15, marker='s')
-                axs[0][0].plot(df['times'], df['Q_opt'])
+                    axs[0][0].scatter(df['times'], df['Q'], label=r"10 \textmu M", s=15, marker='s', color='tab:orange')
+                    axs[0][0].plot(df['times'], df['Q_opt'], color='tab:orange')
             elif df['IBP'].iloc[0] == 'T18N':
                 if df['IBP_conc'].iloc[0] == 1:
-                    axs[0][1].scatter(df['times'], df['Q'], label=r"1 \textmu M", s=15, marker='x')
+                    axs[0][1].scatter(df['times'], df['Q'], label=r"1 \textmu M", s=15, marker='x', color='tab:green')
+                    axs[0][1].plot(df['times'], df['Q_opt'], color='tab:green')
                 elif df['IBP_conc'].iloc[0] == 4:
-                    axs[0][1].scatter(df['times'], df['Q'], label=r"4 \textmu M", s=15, marker='v')
+                    axs[0][1].scatter(df['times'], df['Q'], label=r"4 \textmu M", s=15, marker='v', color='tab:red')
+                    axs[0][1].plot(df['times'], df['Q_opt'], color='tab:red')
                 elif df['IBP_conc'].iloc[0] == 10:
-                    axs[0][1].scatter(df['times'], df['Q'], label=r"10 \textmu M", s=15, marker='s')
-                axs[0][1].plot(df['times'], df['Q_opt'])
+                    axs[0][1].scatter(df['times'], df['Q'], label=r"10 \textmu M", s=15, marker='s', color='tab:orange')
+                    axs[0][1].plot(df['times'], df['Q_opt'], color='tab:orange')
 
         elif df['sucrose_conc'].iloc[0] == 20:
             if df['IBP'].iloc[0] == 'X':
-                axs[1][0].scatter(df['times'], df['Q'], label=r"0 \textmu M", s=15, marker='o')
-                axs[1][0].plot(df['times'], df['Q_opt'])
-                axs[1][1].scatter(df['times'], df['Q'], label=r"0 \textmu M", s=15, marker='o')
-                axs[1][1].plot(df['times'], df['Q_opt'])
+                axs[1][0].scatter(df['times'], df['Q'], label=r"0 \textmu M", s=15, marker='o', color='tab:blue')
+                axs[1][0].plot(df['times'], df['Q_opt'], color='tab:blue')
+                axs[1][1].scatter(df['times'], df['Q'], label=r"0 \textmu M", s=15, marker='o', color='tab:blue')
+                axs[1][1].plot(df['times'], df['Q_opt'], color='tab:blue')
             elif df['IBP'].iloc[0] == 'WT':
                 if df['IBP_conc'].iloc[0] == 1:
-                    axs[1][0].scatter(df['times'], df['Q'], label=r"1 \textmu M", s=15, marker='x')
+                    axs[1][0].scatter(df['times'], df['Q'], label=r"1 \textmu M", s=15, marker='x', color='tab:green')
+                    axs[1][0].plot(df['times'], df['Q_opt'], color='tab:green')
                 elif df['IBP_conc'].iloc[0] == 4:
-                    axs[1][0].scatter(df['times'], df['Q'], label=r"4 \textmu M", s=15, marker='v')
+                    axs[1][0].scatter(df['times'], df['Q'], label=r"4 \textmu M", s=15, marker='v', color='tab:red')
+                    axs[1][0].plot(df['times'], df['Q_opt'], color='tab:red')
                 elif df['IBP_conc'].iloc[0] == 10:
-                    axs[1][0].scatter(df['times'], df['Q'], label=r"10 \textmu M", s=15, marker='s')
-                axs[1][0].plot(df['times'], df['Q_opt'])
+                    axs[1][0].scatter(df['times'], df['Q'], label=r"10 \textmu M", s=15, marker='s', color='tab:orange')
+                    axs[1][0].plot(df['times'], df['Q_opt'], color='tab:orange')
             elif df['IBP'].iloc[0] == 'T18N':
                 if df['IBP_conc'].iloc[0] == 1:
-                    axs[1][1].scatter(df['times'], df['Q'], label=r"1 \textmu M", s=15, marker='x')
+                    axs[1][1].scatter(df['times'], df['Q'], label=r"1 \textmu M", s=15, marker='x', color='tab:green')
+                    axs[1][1].plot(df['times'], df['Q_opt'], color='tab:green')
                 elif df['IBP_conc'].iloc[0] == 4:
-                    axs[1][1].scatter(df['times'], df['Q'], label=r"4 \textmu M", s=15, marker='v')
+                    axs[1][1].scatter(df['times'], df['Q'], label=r"4 \textmu M", s=15, marker='v', color='tab:red')
+                    axs[1][1].plot(df['times'], df['Q_opt'], color='tab:red')
                 elif df['IBP_conc'].iloc[0] == 10:
-                    axs[1][1].scatter(df['times'], df['Q'], label=r"10 \textmu M", s=15, marker='s')
-                axs[1][1].plot(df['times'], df['Q_opt'])
+                    axs[1][1].scatter(df['times'], df['Q'], label=r"10 \textmu M", s=15, marker='s', color='tab:orange')
+                    axs[1][1].plot(df['times'], df['Q_opt'], color='tab:orange')
 
         elif df['sucrose_conc'].iloc[0] == 30:
             if df['IBP'].iloc[0] == 'X':
-                axs[2][0].scatter(df['times'], df['Q'], label=r"0 \textmu M", s=15, marker='o')
-                axs[2][0].plot(df['times'], df['Q_opt'])
-                axs[2][1].scatter(df['times'], df['Q'], label=r"0 \textmu M", s=15, marker='o')
-                axs[2][1].plot(df['times'], df['Q_opt'])
+                axs[2][0].scatter(df['times'], df['Q'], label=r"0 \textmu M", s=15, marker='o', color='tab:blue')
+                axs[2][0].plot(df['times'], df['Q_opt'], color='tab:blue')
+                axs[2][1].scatter(df['times'], df['Q'], label=r"0 \textmu M", s=15, marker='o', color='tab:blue')
+                axs[2][1].plot(df['times'], df['Q_opt'], color='tab:blue')
             elif df['IBP'].iloc[0] == 'WT':
                 if df['IBP_conc'].iloc[0] == 1:
-                    axs[2][0].scatter(df['times'], df['Q'], label=r"1 \textmu M", s=15, marker='x')
+                    axs[2][0].scatter(df['times'], df['Q'], label=r"1 \textmu M", s=15, marker='x', color='tab:green')
+                    axs[2][0].plot(df['times'], df['Q_opt'], color='tab:green')
                 elif df['IBP_conc'].iloc[0] == 4:
-                    axs[2][0].scatter(df['times'], df['Q'], label=r"4 \textmu M", s=15, marker='v')
+                    axs[2][0].scatter(df['times'], df['Q'], label=r"4 \textmu M", s=15, marker='v', color='tab:red')
+                    axs[2][0].plot(df['times'], df['Q_opt'], color='tab:red')
                 elif df['IBP_conc'].iloc[0] == 10:
-                    axs[2][0].scatter(df['times'], df['Q'], label=r"10 \textmu M", s=15, marker='s')
-                axs[2][0].plot(df['times'], df['Q_opt'])
+                    axs[2][0].scatter(df['times'], df['Q'], label=r"10 \textmu M", s=15, marker='s', color='tab:orange')
+                    axs[2][0].plot(df['times'], df['Q_opt'], color='tab:orange')
             elif df['IBP'].iloc[0] == 'T18N':
                 if df['IBP_conc'].iloc[0] == 1:
-                    axs[2][1].scatter(df['times'], df['Q'], label=r"1 \textmu M", s=15, marker='x')
+                    axs[2][1].scatter(df['times'], df['Q'], label=r"1 \textmu M", s=15, marker='x', color='tab:green')
+                    axs[2][1].plot(df['times'], df['Q_opt'], color='tab:green')
                 elif df['IBP_conc'].iloc[0] == 4:
-                    axs[2][1].scatter(df['times'], df['Q'], label=r"4 \textmu M", s=15, marker='v')
+                    axs[2][1].scatter(df['times'], df['Q'], label=r"4 \textmu M", s=15, marker='v', color='tab:red')
+                    axs[2][1].plot(df['times'], df['Q_opt'], color='tab:red')
                 elif df['IBP_conc'].iloc[0] == 10:
-                    axs[2][1].scatter(df['times'], df['Q'], label=r"10 \textmu M", s=15, marker='s')
-                axs[2][1].plot(df['times'], df['Q_opt'])
+                    axs[2][1].scatter(df['times'], df['Q'], label=r"10 \textmu M", s=15, marker='s', color='tab:orange')
+                    axs[2][1].plot(df['times'], df['Q_opt'], color='tab:orange')
     
     # Order legend (https://stackoverflow.com/a/46160465/8797886)
     handles, labels = plt.gca().get_legend_handles_labels()
